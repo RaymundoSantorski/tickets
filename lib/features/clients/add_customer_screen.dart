@@ -4,7 +4,8 @@ import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
 
 class AddCustomerScreen extends StatefulWidget {
-  const AddCustomerScreen({super.key});
+  const AddCustomerScreen({super.key, this.customer});
+  final Customer? customer;
 
   @override
   State<AddCustomerScreen> createState() => _AddCustomerScreenState();
@@ -24,9 +25,32 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   TextEditingController stateController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    Customer? customer = widget.customer;
+    if (customer != null) {
+      nameController.text = customer.name;
+      fullNameController.text = customer.fullName;
+      phoneController.text = customer.phoneNumber != null
+          ? customer.phoneNumber!
+          : '';
+      if (customer.address != null) {
+        showAddressForm = true;
+        streetController.text = customer.address!.street;
+        numberController.text = customer.address!.number;
+        neighborhoodController.text = customer.address!.neighborhood;
+        zipCodeController.text = customer.address!.zipCode;
+        cityController.text = customer.address!.city;
+        stateController.text = customer.address!.state;
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     CustomerProvider db = context.watch<CustomerProvider>();
     void onSave() {
+      Customer newCustomer;
       Address? address;
       if (showAddressForm) {
         address = Address()
@@ -37,18 +61,24 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           ..city = cityController.text
           ..state = stateController.text;
       }
-      Customer newCustomer = Customer()
+      newCustomer = Customer()
         ..name = nameController.text
         ..fullName = fullNameController.text
         ..phoneNumber = phoneController.text
         ..address = address;
-
+      if (widget.customer != null) {
+        newCustomer.id = widget.customer!.id;
+      }
       db.save(newCustomer);
       Navigator.pop(context);
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Add Customer')),
+      appBar: AppBar(
+        title: Text(
+          widget.customer != null ? 'Editar cliente' : 'Agregar cliente',
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ListView(
