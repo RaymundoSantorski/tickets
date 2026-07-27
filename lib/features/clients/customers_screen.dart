@@ -4,8 +4,15 @@ import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/features/clients/add_customer_screen.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
 
-class CustomersScreen extends StatelessWidget {
+class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
+
+  @override
+  State<CustomersScreen> createState() => _CustomersScreenState();
+}
+
+class _CustomersScreenState extends State<CustomersScreen> {
+  TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +26,10 @@ class CustomersScreen extends StatelessWidget {
           builder: (_) => AddCustomerScreen(customer: customer),
         ),
       );
+    }
+
+    void search(String value) {
+      db.search(value);
     }
 
     Future<void> confirmDelete(
@@ -107,9 +118,24 @@ class CustomersScreen extends StatelessWidget {
         child: Icon(Icons.add),
       ),
       body: ListView.builder(
-        itemCount: customers.length,
+        itemCount: customers.length + 1,
         itemBuilder: (context, index) {
-          Customer customer = customers[index];
+          if (index == 0) {
+            return Card(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: (value) => search(value),
+                    ),
+                  ),
+                  IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+                ],
+              ),
+            );
+          }
+          Customer customer = customers[index - 1];
           return Row(
             children: [
               Expanded(

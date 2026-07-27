@@ -26,4 +26,12 @@ class CustomerRepository {
   Future<Customer?> get(Id id) async {
     return await isar.customers.get(id);
   }
+
+  Future<List<Customer>> search(String query) async {
+    List<Customer> result = await isar.customers
+        .filter()
+        .nameContains(query)
+        .findAll();
+    return result;
+  }
 }

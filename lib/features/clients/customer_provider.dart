@@ -10,6 +10,15 @@ class CustomerProvider extends ChangeNotifier {
 
   List<Customer> customers = [];
 
+  Future<void> search(String query) async {
+    if (query.isNotEmpty) {
+      customers = await repository.search(query);
+      notifyListeners();
+    } else {
+      load();
+    }
+  }
+
   Future<void> load() async {
     customers = await repository.getAll();
     notifyListeners();
