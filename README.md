@@ -1,17 +1,23 @@
-# tickets
+# Tickets
 
-A new Flutter project.
+Specially meant for my own use to simplify the logistics of my bussiness. 
 
-## Getting Started
+## About
 
-This project is a starting point for a Flutter application.
+Some of the functionalities I want this app to have are:
 
-A few resources to get you started if this is your first Flutter project:
+    - Customer saving with address 
+    - Product saving with cost, price, type, etc.
+    - Let the customer accumulate products over time, carrying the total number of items and the total weight of the package
+    - Calculate ship quote by package
+    - Generate receipts
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Release Notes 
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Tickets v0.2.0
+- Full customer management 
+- Data persistency with Isar
+- Repository + Provider architecture
+- Save, edit and delete forms
+- Customer searching 
+
