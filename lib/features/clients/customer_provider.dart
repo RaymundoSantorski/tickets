@@ -15,7 +15,7 @@ class CustomerProvider extends ChangeNotifier {
       customers = await repository.search(query);
       notifyListeners();
     } else {
-      load();
+      await load();
     }
   }
 
