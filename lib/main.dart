@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tickets/app/app.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/clients/customer_repository.dart';
+import 'package:tickets/features/products/product_provider.dart';
 import 'package:tickets/features/products/product_repository.dart';
 import 'package:tickets/services/database_service.dart';
 
@@ -19,6 +20,9 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(
           create: (_) => CustomerProvider(customerRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProductProvider(productRepository),
         ),
       ],
       child: TicketsApp(),

@@ -1,10 +1,171 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tickets/core/models/product.dart';
+import 'package:tickets/features/products/add_product_screen.dart';
+import 'package:tickets/features/products/product_provider.dart';
 
-class ProductsScreen extends StatelessWidget {
+class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
 
   @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends State<ProductsScreen> {
+  TextEditingController searchController = TextEditingController();
+
+  @override
   Widget build(BuildContext context) {
-    return Container();
+    List<Product> products = context.watch<ProductProvider>().products;
+    ProductProvider db = context.read<ProductProvider>();
+
+    void onPressed({Product? product}) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => AddProductScreen(product: product)),
+      );
+    }
+
+    // void search(String value) {
+    //   db.search(value);
+    // }
+
+    Future<void> confirmDelete(
+      BuildContext context,
+      ProductProvider db,
+      Product product,
+    ) async {
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+                SizedBox(width: 10),
+                Text('¿Eliminar producto?'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text(
+                    '¿Estás seguro de que deseas eliminar "${product.name}"?',
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Esta acción no se puede deshacer y perderás los datos relacionados con el producto',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Eliminar'),
+                onPressed: () async {
+                  Navigator.of(context).pop();
+
+                  await db.delete(product.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        persist: false,
+                        duration: Duration(seconds: 3),
+                        content: Text('"${product.name}" ha sido eliminado.'),
+                        action: SnackBarAction(
+                          label: 'Deshacer',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            db.save(product);
+                          },
+                        ),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Clientes')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: onPressed,
+        child: Icon(Icons.add),
+      ),
+      body: ListView.builder(
+        itemCount: products.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Card(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: searchController,
+                      // onChanged: (value) => search(value),
+                    ),
+                  ),
+                  IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+                ],
+              ),
+            );
+          }
+          Product product = products[index - 1];
+          return Row(
+            children: [
+              Expanded(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.person, size: 30.0),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [Text(product.name), Text(product.code)],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => confirmDelete(context, db, product),
+                icon: Icon(Icons.delete),
+              ),
+              IconButton(
+                onPressed: () => onPressed(product: product),
+                icon: Icon(Icons.edit),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
