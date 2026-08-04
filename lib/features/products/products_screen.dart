@@ -17,6 +17,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   Widget build(BuildContext context) {
     List<Product> products = context.watch<ProductProvider>().products;
+    bool? active = context.watch<ProductProvider>().active;
     ProductProvider db = context.read<ProductProvider>();
 
     void onPressed({Product? product}) {
@@ -26,9 +27,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       );
     }
 
-    // void search(String value) {
-    //   db.search(value);
-    // }
+    void search(String value) {
+      db.search(value);
+    }
 
     Future<void> confirmDelete(
       BuildContext context,
@@ -109,62 +110,94 @@ class _ProductsScreenState extends State<ProductsScreen> {
       );
     }
 
+    void filter(bool? value) {
+      db.filterByActive(value);
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text('Clientes')),
       floatingActionButton: FloatingActionButton(
         onPressed: onPressed,
         child: Icon(Icons.add),
       ),
-      body: ListView.builder(
-        itemCount: products.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Card(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      // onChanged: (value) => search(value),
-                    ),
-                  ),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-                ],
-              ),
-            );
-          }
-          Product product = products[index - 1];
-          return Row(
-            children: [
-              Expanded(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        Icon(Icons.person, size: 30.0),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [Text(product.name), Text(product.code)],
-                          ),
-                        ),
-                      ],
-                    ),
+      body: Column(
+        children: [
+          Card(
+            child: Row(
+              children: [
+                ChoiceChip(
+                  label: Text('Todo'),
+                  selected: active == null,
+                  onSelected: (_) => filter(null),
+                ),
+                ChoiceChip(
+                  label: Text('Activo'),
+                  selected: active == true,
+                  onSelected: (_) => filter(true),
+                ),
+                ChoiceChip(
+                  label: Text('Inactivo'),
+                  selected: active == false,
+                  onSelected: (_) => filter(false),
+                ),
+              ],
+            ),
+          ),
+          Card(
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: searchController,
+                    onChanged: (value) => search(value),
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: () => confirmDelete(context, db, product),
-                icon: Icon(Icons.delete),
-              ),
-              IconButton(
-                onPressed: () => onPressed(product: product),
-                icon: Icon(Icons.edit),
-              ),
-            ],
-          );
-        },
+                IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                Product product = products[index];
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Icon(Icons.person, size: 30.0),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(product.name),
+                                    Text(product.code),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => confirmDelete(context, db, product),
+                      icon: Icon(Icons.delete),
+                    ),
+                    IconButton(
+                      onPressed: () => onPressed(product: product),
+                      icon: Icon(Icons.edit),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

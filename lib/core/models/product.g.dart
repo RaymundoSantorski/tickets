@@ -20,7 +20,7 @@ const ProductSchema = CollectionSchema(
     r'active': PropertySchema(
       id: 0,
       name: r'active',
-      type: IsarType.double,
+      type: IsarType.bool,
     ),
     r'code': PropertySchema(
       id: 1,
@@ -100,7 +100,7 @@ void _productSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDouble(offsets[0], object.active);
+  writer.writeBool(offsets[0], object.active);
   writer.writeString(offsets[1], object.code);
   writer.writeDouble(offsets[2], object.cost);
   writer.writeDouble(offsets[3], object.height);
@@ -119,7 +119,7 @@ Product _productDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Product();
-  object.active = reader.readDoubleOrNull(offsets[0]);
+  object.active = reader.readBoolOrNull(offsets[0]);
   object.code = reader.readString(offsets[1]);
   object.cost = reader.readDouble(offsets[2]);
   object.height = reader.readDoubleOrNull(offsets[3]);
@@ -142,7 +142,7 @@ P _productDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
@@ -284,63 +284,11 @@ extension ProductQueryFilter
   }
 
   QueryBuilder<Product, Product, QAfterFilterCondition> activeEqualTo(
-    double? value, {
-    double epsilon = Query.epsilon,
-  }) {
+      bool? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'active',
         value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Product, Product, QAfterFilterCondition> activeGreaterThan(
-    double? value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'active',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Product, Product, QAfterFilterCondition> activeLessThan(
-    double? value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'active',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Product, Product, QAfterFilterCondition> activeBetween(
-    double? lower,
-    double? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'active',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
       ));
     });
   }
@@ -1483,7 +1431,7 @@ extension ProductQueryProperty
     });
   }
 
-  QueryBuilder<Product, double?, QQueryOperations> activeProperty() {
+  QueryBuilder<Product, bool?, QQueryOperations> activeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'active');
     });

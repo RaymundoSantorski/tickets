@@ -9,6 +9,7 @@ class ProductProvider extends ChangeNotifier {
   }
 
   List<Product> products = [];
+  bool? active;
 
   Future<void> load() async {
     products = await db.getAll();
@@ -27,5 +28,23 @@ class ProductProvider extends ChangeNotifier {
 
   Future<Product?> get(int id) async {
     return await db.get(id);
+  }
+
+  Future<void> search(String query) async {
+    if (query.isNotEmpty) {
+      products = await db.search(query);
+      notifyListeners();
+    } else {
+      load();
+    }
+  }
+
+  Future<void> filterByActive(bool? value) async {
+    active = value;
+    await load();
+    if (active != null) {
+      products = products.where((product) => product.active == value).toList();
+      // notifyListeners();
+    }
   }
 }

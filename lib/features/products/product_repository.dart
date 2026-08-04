@@ -26,4 +26,16 @@ class ProductRepository {
   Future<List<Product>> getAll() async {
     return await isar.products.where().findAll();
   }
+
+  Future<List<Product>> search(String query) async {
+    List<Product> codeProducts = await isar.products
+        .filter()
+        .codeContains(query)
+        .findAll();
+    List<Product> nameProducts = await isar.products
+        .filter()
+        .nameContains(query)
+        .findAll();
+    return [...codeProducts, ...nameProducts];
+  }
 }

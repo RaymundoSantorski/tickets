@@ -16,5 +16,5 @@ class Product {
   double? height;
   double? width;
   double? length;
-  double? active;
+  bool? active = true;
 }
