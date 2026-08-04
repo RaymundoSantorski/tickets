@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/product.dart';
 import 'package:tickets/features/products/add_product_screen.dart';
+import 'package:tickets/features/products/product_details_screen.dart';
 import 'package:tickets/features/products/product_provider.dart';
 
 class ProductsScreen extends StatefulWidget {
@@ -164,22 +165,33 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 return Row(
                   children: [
                     Expanded(
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.person, size: 30.0),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(product.name),
-                                    Text(product.code),
-                                  ],
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailsScreen(product: product),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.person, size: 30.0),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(product.name),
+                                      Text(product.code),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
