@@ -33,8 +33,23 @@ const CustomerSchema = CollectionSchema(
       name: r'name',
       type: IsarType.string,
     ),
-    r'phoneNumber': PropertySchema(
+    r'pendingItems': PropertySchema(
       id: 3,
+      name: r'pendingItems',
+      type: IsarType.long,
+    ),
+    r'pendingVolumetricWeight': PropertySchema(
+      id: 4,
+      name: r'pendingVolumetricWeight',
+      type: IsarType.double,
+    ),
+    r'pendingWeight': PropertySchema(
+      id: 5,
+      name: r'pendingWeight',
+      type: IsarType.double,
+    ),
+    r'phoneNumber': PropertySchema(
+      id: 6,
       name: r'phoneNumber',
       type: IsarType.string,
     )
@@ -91,7 +106,10 @@ void _customerSerialize(
   );
   writer.writeString(offsets[1], object.fullName);
   writer.writeString(offsets[2], object.name);
-  writer.writeString(offsets[3], object.phoneNumber);
+  writer.writeLong(offsets[3], object.pendingItems);
+  writer.writeDouble(offsets[4], object.pendingVolumetricWeight);
+  writer.writeDouble(offsets[5], object.pendingWeight);
+  writer.writeString(offsets[6], object.phoneNumber);
 }
 
 Customer _customerDeserialize(
@@ -109,7 +127,10 @@ Customer _customerDeserialize(
   object.fullName = reader.readString(offsets[1]);
   object.id = id;
   object.name = reader.readString(offsets[2]);
-  object.phoneNumber = reader.readStringOrNull(offsets[3]);
+  object.pendingItems = reader.readLong(offsets[3]);
+  object.pendingVolumetricWeight = reader.readDouble(offsets[4]);
+  object.pendingWeight = reader.readDouble(offsets[5]);
+  object.phoneNumber = reader.readStringOrNull(offsets[6]);
   return object;
 }
 
@@ -131,6 +152,12 @@ P _customerDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readDouble(offset)) as P;
+    case 5:
+      return (reader.readDouble(offset)) as P;
+    case 6:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -554,6 +581,189 @@ extension CustomerQueryFilter
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> pendingItemsEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'pendingItems',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      pendingItemsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'pendingItems',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> pendingItemsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'pendingItems',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> pendingItemsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'pendingItems',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      pendingVolumetricWeightEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'pendingVolumetricWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      pendingVolumetricWeightGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'pendingVolumetricWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      pendingVolumetricWeightLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'pendingVolumetricWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      pendingVolumetricWeightBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'pendingVolumetricWeight',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> pendingWeightEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'pendingWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      pendingWeightGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'pendingWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> pendingWeightLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'pendingWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> pendingWeightBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'pendingWeight',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneNumberIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -742,6 +952,44 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByPendingItems() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingItems', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByPendingItemsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingItems', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy>
+      sortByPendingVolumetricWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingVolumetricWeight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy>
+      sortByPendingVolumetricWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingVolumetricWeight', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByPendingWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingWeight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByPendingWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingWeight', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByPhoneNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phoneNumber', Sort.asc);
@@ -793,6 +1041,44 @@ extension CustomerQuerySortThenBy
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByPendingItems() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingItems', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByPendingItemsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingItems', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy>
+      thenByPendingVolumetricWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingVolumetricWeight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy>
+      thenByPendingVolumetricWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingVolumetricWeight', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByPendingWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingWeight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByPendingWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pendingWeight', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByPhoneNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phoneNumber', Sort.asc);
@@ -819,6 +1105,25 @@ extension CustomerQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QDistinct> distinctByPendingItems() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pendingItems');
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QDistinct>
+      distinctByPendingVolumetricWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pendingVolumetricWeight');
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QDistinct> distinctByPendingWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pendingWeight');
     });
   }
 
@@ -853,6 +1158,25 @@ extension CustomerQueryProperty
   QueryBuilder<Customer, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<Customer, int, QQueryOperations> pendingItemsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pendingItems');
+    });
+  }
+
+  QueryBuilder<Customer, double, QQueryOperations>
+      pendingVolumetricWeightProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pendingVolumetricWeight');
+    });
+  }
+
+  QueryBuilder<Customer, double, QQueryOperations> pendingWeightProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pendingWeight');
     });
   }
 

@@ -8,6 +8,9 @@ class Customer {
   late String name;
   String? phoneNumber;
   Address? address;
+  int pendingItems = 0;
+  double pendingWeight = 0;
+  double pendingVolumetricWeight = 0;
 }
 
 @embedded
