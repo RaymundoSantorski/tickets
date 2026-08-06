@@ -17,55 +17,56 @@ const TicketSchema = CollectionSchema(
   name: r'Ticket',
   id: -4590405904438382117,
   properties: {
-    r'customerId': PropertySchema(
+    r'balanceAfter': PropertySchema(
       id: 0,
+      name: r'balanceAfter',
+      type: IsarType.double,
+    ),
+    r'balanceBefore': PropertySchema(
+      id: 1,
+      name: r'balanceBefore',
+      type: IsarType.double,
+    ),
+    r'customerId': PropertySchema(
+      id: 2,
       name: r'customerId',
       type: IsarType.long,
     ),
     r'date': PropertySchema(
-      id: 1,
+      id: 3,
       name: r'date',
       type: IsarType.dateTime,
     ),
     r'discount': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'discount',
       type: IsarType.double,
     ),
+    r'displayName': PropertySchema(
+      id: 5,
+      name: r'displayName',
+      type: IsarType.string,
+    ),
+    r'dueDate': PropertySchema(
+      id: 6,
+      name: r'dueDate',
+      type: IsarType.dateTime,
+    ),
     r'fullName': PropertySchema(
-      id: 3,
+      id: 7,
       name: r'fullName',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
-      id: 4,
-      name: r'name',
-      type: IsarType.string,
+    r'items': PropertySchema(
+      id: 8,
+      name: r'items',
+      type: IsarType.objectList,
+      target: r'TicketItem',
     ),
     r'notes': PropertySchema(
-      id: 5,
+      id: 9,
       name: r'notes',
       type: IsarType.string,
-    ),
-    r'oldDebt': PropertySchema(
-      id: 6,
-      name: r'oldDebt',
-      type: IsarType.double,
-    ),
-    r'pendingItmes': PropertySchema(
-      id: 7,
-      name: r'pendingItmes',
-      type: IsarType.long,
-    ),
-    r'pendingVolumetricWeight': PropertySchema(
-      id: 8,
-      name: r'pendingVolumetricWeight',
-      type: IsarType.double,
-    ),
-    r'pendingWeight': PropertySchema(
-      id: 9,
-      name: r'pendingWeight',
-      type: IsarType.double,
     ),
     r'phoneNumber': PropertySchema(
       id: 10,
@@ -75,12 +76,24 @@ const TicketSchema = CollectionSchema(
     r'status': PropertySchema(
       id: 11,
       name: r'status',
-      type: IsarType.bool,
+      type: IsarType.byte,
+      enumMap: _TicketstatusEnumValueMap,
+    ),
+    r'subtotal': PropertySchema(
+      id: 12,
+      name: r'subtotal',
+      type: IsarType.double,
     ),
     r'total': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'total',
       type: IsarType.double,
+    ),
+    r'type': PropertySchema(
+      id: 14,
+      name: r'type',
+      type: IsarType.byte,
+      enumMap: _TickettypeEnumValueMap,
     )
   },
   estimateSize: _ticketEstimateSize,
@@ -90,7 +103,7 @@ const TicketSchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {},
-  embeddedSchemas: {},
+  embeddedSchemas: {r'TicketItem': TicketItemSchema},
   getId: _ticketGetId,
   getLinks: _ticketGetLinks,
   attach: _ticketAttach,
@@ -103,8 +116,16 @@ int _ticketEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.displayName.length * 3;
   bytesCount += 3 + object.fullName.length * 3;
-  bytesCount += 3 + object.name.length * 3;
+  bytesCount += 3 + object.items.length * 3;
+  {
+    final offsets = allOffsets[TicketItem]!;
+    for (var i = 0; i < object.items.length; i++) {
+      final value = object.items[i];
+      bytesCount += TicketItemSchema.estimateSize(value, offsets, allOffsets);
+    }
+  }
   bytesCount += 3 + object.notes.length * 3;
   bytesCount += 3 + object.phoneNumber.length * 3;
   return bytesCount;
@@ -116,19 +137,26 @@ void _ticketSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.customerId);
-  writer.writeDateTime(offsets[1], object.date);
-  writer.writeDouble(offsets[2], object.discount);
-  writer.writeString(offsets[3], object.fullName);
-  writer.writeString(offsets[4], object.name);
-  writer.writeString(offsets[5], object.notes);
-  writer.writeDouble(offsets[6], object.oldDebt);
-  writer.writeLong(offsets[7], object.pendingItmes);
-  writer.writeDouble(offsets[8], object.pendingVolumetricWeight);
-  writer.writeDouble(offsets[9], object.pendingWeight);
+  writer.writeDouble(offsets[0], object.balanceAfter);
+  writer.writeDouble(offsets[1], object.balanceBefore);
+  writer.writeLong(offsets[2], object.customerId);
+  writer.writeDateTime(offsets[3], object.date);
+  writer.writeDouble(offsets[4], object.discount);
+  writer.writeString(offsets[5], object.displayName);
+  writer.writeDateTime(offsets[6], object.dueDate);
+  writer.writeString(offsets[7], object.fullName);
+  writer.writeObjectList<TicketItem>(
+    offsets[8],
+    allOffsets,
+    TicketItemSchema.serialize,
+    object.items,
+  );
+  writer.writeString(offsets[9], object.notes);
   writer.writeString(offsets[10], object.phoneNumber);
-  writer.writeBool(offsets[11], object.status);
-  writer.writeDouble(offsets[12], object.total);
+  writer.writeByte(offsets[11], object.status.index);
+  writer.writeDouble(offsets[12], object.subtotal);
+  writer.writeDouble(offsets[13], object.total);
+  writer.writeByte(offsets[14], object.type.index);
 }
 
 Ticket _ticketDeserialize(
@@ -138,20 +166,31 @@ Ticket _ticketDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Ticket();
-  object.customerId = reader.readLong(offsets[0]);
-  object.date = reader.readDateTime(offsets[1]);
-  object.discount = reader.readDouble(offsets[2]);
-  object.fullName = reader.readString(offsets[3]);
+  object.balanceAfter = reader.readDouble(offsets[0]);
+  object.balanceBefore = reader.readDouble(offsets[1]);
+  object.customerId = reader.readLong(offsets[2]);
+  object.date = reader.readDateTime(offsets[3]);
+  object.discount = reader.readDouble(offsets[4]);
+  object.displayName = reader.readString(offsets[5]);
+  object.dueDate = reader.readDateTime(offsets[6]);
+  object.fullName = reader.readString(offsets[7]);
   object.id = id;
-  object.name = reader.readString(offsets[4]);
-  object.notes = reader.readString(offsets[5]);
-  object.oldDebt = reader.readDouble(offsets[6]);
-  object.pendingItmes = reader.readLong(offsets[7]);
-  object.pendingVolumetricWeight = reader.readDouble(offsets[8]);
-  object.pendingWeight = reader.readDouble(offsets[9]);
+  object.items = reader.readObjectList<TicketItem>(
+        offsets[8],
+        TicketItemSchema.deserialize,
+        allOffsets,
+        TicketItem(),
+      ) ??
+      [];
+  object.notes = reader.readString(offsets[9]);
   object.phoneNumber = reader.readString(offsets[10]);
-  object.status = reader.readBool(offsets[11]);
-  object.total = reader.readDouble(offsets[12]);
+  object.status =
+      _TicketstatusValueEnumMap[reader.readByteOrNull(offsets[11])] ??
+          TicketStatus.peding;
+  object.subtotal = reader.readDouble(offsets[12]);
+  object.total = reader.readDouble(offsets[13]);
+  object.type = _TickettypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
+      TicketType.sale;
   return object;
 }
 
@@ -163,35 +202,68 @@ P _ticketDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
-    case 1:
-      return (reader.readDateTime(offset)) as P;
-    case 2:
       return (reader.readDouble(offset)) as P;
+    case 1:
+      return (reader.readDouble(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readObjectList<TicketItem>(
+            offset,
+            TicketItemSchema.deserialize,
+            allOffsets,
+            TicketItem(),
+          ) ??
+          []) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 10:
       return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readBool(offset)) as P;
+      return (_TicketstatusValueEnumMap[reader.readByteOrNull(offset)] ??
+          TicketStatus.peding) as P;
     case 12:
       return (reader.readDouble(offset)) as P;
+    case 13:
+      return (reader.readDouble(offset)) as P;
+    case 14:
+      return (_TickettypeValueEnumMap[reader.readByteOrNull(offset)] ??
+          TicketType.sale) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _TicketstatusEnumValueMap = {
+  'peding': 0,
+  'partial': 1,
+  'paid': 2,
+};
+const _TicketstatusValueEnumMap = {
+  0: TicketStatus.peding,
+  1: TicketStatus.partial,
+  2: TicketStatus.paid,
+};
+const _TickettypeEnumValueMap = {
+  'sale': 0,
+  'payment': 1,
+  'shipment': 2,
+};
+const _TickettypeValueEnumMap = {
+  0: TicketType.sale,
+  1: TicketType.payment,
+  2: TicketType.shipment,
+};
 
 Id _ticketGetId(Ticket object) {
   return object.id;
@@ -281,6 +353,130 @@ extension TicketQueryWhere on QueryBuilder<Ticket, Ticket, QWhereClause> {
 }
 
 extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceAfterEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'balanceAfter',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceAfterGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'balanceAfter',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceAfterLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'balanceAfter',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceAfterBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'balanceAfter',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceBeforeEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'balanceBefore',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceBeforeGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'balanceBefore',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceBeforeLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'balanceBefore',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> balanceBeforeBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'balanceBefore',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> customerIdEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -445,6 +641,189 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'displayName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'displayName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'displayName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> displayNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'displayName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> dueDateEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> dueDateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> dueDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> dueDateBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -631,132 +1010,87 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsLengthEqualTo(
+      int length) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.listLength(
+        r'items',
+        length,
+        true,
+        length,
+        true,
+      );
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameGreaterThan(
-    String value, {
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'items',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'items',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsLengthLessThan(
+    int length, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.listLength(
+        r'items',
+        0,
+        true,
+        length,
+        include,
+      );
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameLessThan(
-    String value, {
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsLengthGreaterThan(
+    int length, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.listLength(
+        r'items',
+        length,
+        include,
+        999999,
+        true,
+      );
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameBetween(
-    String lower,
-    String upper, {
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsLengthBetween(
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'name',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameContains(String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'name',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'name',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> nameIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'name',
-        value: '',
-      ));
+      return query.listLength(
+        r'items',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -886,249 +1220,6 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'notes',
         value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> oldDebtEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'oldDebt',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> oldDebtGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'oldDebt',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> oldDebtLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'oldDebt',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> oldDebtBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'oldDebt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingItmesEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'pendingItmes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingItmesGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'pendingItmes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingItmesLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'pendingItmes',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingItmesBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'pendingItmes',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition>
-      pendingVolumetricWeightEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'pendingVolumetricWeight',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition>
-      pendingVolumetricWeightGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'pendingVolumetricWeight',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition>
-      pendingVolumetricWeightLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'pendingVolumetricWeight',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition>
-      pendingVolumetricWeightBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'pendingVolumetricWeight',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingWeightEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'pendingWeight',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingWeightGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'pendingWeight',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingWeightLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'pendingWeight',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> pendingWeightBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'pendingWeight',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
       ));
     });
   }
@@ -1264,11 +1355,116 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> statusEqualTo(
-      bool value) {
+      TicketStatus value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'status',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> statusGreaterThan(
+    TicketStatus value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> statusLessThan(
+    TicketStatus value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> statusBetween(
+    TicketStatus lower,
+    TicketStatus upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> subtotalEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subtotal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> subtotalGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subtotal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> subtotalLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subtotal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> subtotalBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subtotal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1334,13 +1530,97 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> typeEqualTo(
+      TicketType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> typeGreaterThan(
+    TicketType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> typeLessThan(
+    TicketType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> typeBetween(
+    TicketType lower,
+    TicketType upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'type',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
-extension TicketQueryObject on QueryBuilder<Ticket, Ticket, QFilterCondition> {}
+extension TicketQueryObject on QueryBuilder<Ticket, Ticket, QFilterCondition> {
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> itemsElement(
+      FilterQuery<TicketItem> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'items');
+    });
+  }
+}
 
 extension TicketQueryLinks on QueryBuilder<Ticket, Ticket, QFilterCondition> {}
 
 extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByBalanceAfter() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceAfter', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByBalanceAfterDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceAfter', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByBalanceBefore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceBefore', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByBalanceBeforeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceBefore', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'customerId', Sort.asc);
@@ -1377,6 +1657,30 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByDisplayName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'displayName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByDisplayNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'displayName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByFullName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullName', Sort.asc);
@@ -1389,18 +1693,6 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByName() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'name', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByNameDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'name', Sort.desc);
-    });
-  }
-
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -1410,55 +1702,6 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByNotesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByOldDebt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'oldDebt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByOldDebtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'oldDebt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPendingItmes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingItmes', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPendingItmesDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingItmes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPendingVolumetricWeight() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingVolumetricWeight', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy>
-      sortByPendingVolumetricWeightDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingVolumetricWeight', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPendingWeight() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingWeight', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPendingWeightDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingWeight', Sort.desc);
     });
   }
 
@@ -1486,6 +1729,18 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortBySubtotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtotal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortBySubtotalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtotal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByTotal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'total', Sort.asc);
@@ -1497,9 +1752,45 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
       return query.addSortBy(r'total', Sort.desc);
     });
   }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
 }
 
 extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByBalanceAfter() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceAfter', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByBalanceAfterDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceAfter', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByBalanceBefore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceBefore', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByBalanceBeforeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'balanceBefore', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'customerId', Sort.asc);
@@ -1536,6 +1827,30 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByDisplayName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'displayName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByDisplayNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'displayName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByFullName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullName', Sort.asc);
@@ -1560,18 +1875,6 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByName() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'name', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByNameDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'name', Sort.desc);
-    });
-  }
-
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -1581,55 +1884,6 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByNotesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByOldDebt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'oldDebt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByOldDebtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'oldDebt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPendingItmes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingItmes', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPendingItmesDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingItmes', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPendingVolumetricWeight() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingVolumetricWeight', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy>
-      thenByPendingVolumetricWeightDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingVolumetricWeight', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPendingWeight() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingWeight', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPendingWeightDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'pendingWeight', Sort.desc);
     });
   }
 
@@ -1657,6 +1911,18 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenBySubtotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtotal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenBySubtotalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtotal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByTotal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'total', Sort.asc);
@@ -1668,9 +1934,33 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
       return query.addSortBy(r'total', Sort.desc);
     });
   }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
 }
 
 extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByBalanceAfter() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'balanceAfter');
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByBalanceBefore() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'balanceBefore');
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByCustomerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'customerId');
@@ -1689,6 +1979,19 @@ extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByDisplayName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'displayName', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dueDate');
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByFullName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1696,41 +1999,10 @@ extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
     });
   }
 
-  QueryBuilder<Ticket, Ticket, QDistinct> distinctByName(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
-    });
-  }
-
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByNotes(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notes', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QDistinct> distinctByOldDebt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'oldDebt');
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QDistinct> distinctByPendingItmes() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'pendingItmes');
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QDistinct> distinctByPendingVolumetricWeight() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'pendingVolumetricWeight');
-    });
-  }
-
-  QueryBuilder<Ticket, Ticket, QDistinct> distinctByPendingWeight() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'pendingWeight');
     });
   }
 
@@ -1747,9 +2019,21 @@ extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctBySubtotal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'subtotal');
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByTotal() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'total');
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'type');
     });
   }
 }
@@ -1758,6 +2042,18 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
   QueryBuilder<Ticket, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Ticket, double, QQueryOperations> balanceAfterProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'balanceAfter');
+    });
+  }
+
+  QueryBuilder<Ticket, double, QQueryOperations> balanceBeforeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'balanceBefore');
     });
   }
 
@@ -1779,15 +2075,27 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Ticket, String, QQueryOperations> displayNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'displayName');
+    });
+  }
+
+  QueryBuilder<Ticket, DateTime, QQueryOperations> dueDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dueDate');
+    });
+  }
+
   QueryBuilder<Ticket, String, QQueryOperations> fullNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fullName');
     });
   }
 
-  QueryBuilder<Ticket, String, QQueryOperations> nameProperty() {
+  QueryBuilder<Ticket, List<TicketItem>, QQueryOperations> itemsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'name');
+      return query.addPropertyName(r'items');
     });
   }
 
@@ -1797,46 +2105,33 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Ticket, double, QQueryOperations> oldDebtProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'oldDebt');
-    });
-  }
-
-  QueryBuilder<Ticket, int, QQueryOperations> pendingItmesProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'pendingItmes');
-    });
-  }
-
-  QueryBuilder<Ticket, double, QQueryOperations>
-      pendingVolumetricWeightProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'pendingVolumetricWeight');
-    });
-  }
-
-  QueryBuilder<Ticket, double, QQueryOperations> pendingWeightProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'pendingWeight');
-    });
-  }
-
   QueryBuilder<Ticket, String, QQueryOperations> phoneNumberProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'phoneNumber');
     });
   }
 
-  QueryBuilder<Ticket, bool, QQueryOperations> statusProperty() {
+  QueryBuilder<Ticket, TicketStatus, QQueryOperations> statusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'status');
+    });
+  }
+
+  QueryBuilder<Ticket, double, QQueryOperations> subtotalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'subtotal');
     });
   }
 
   QueryBuilder<Ticket, double, QQueryOperations> totalProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'total');
+    });
+  }
+
+  QueryBuilder<Ticket, TicketType, QQueryOperations> typeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'type');
     });
   }
 }
