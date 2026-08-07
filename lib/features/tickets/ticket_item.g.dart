@@ -33,23 +33,28 @@ const TicketItemSchema = Schema(
       name: r'quantity',
       type: IsarType.long,
     ),
-    r'unitCost': PropertySchema(
+    r'subtotal': PropertySchema(
       id: 4,
+      name: r'subtotal',
+      type: IsarType.double,
+    ),
+    r'unitCost': PropertySchema(
+      id: 5,
       name: r'unitCost',
       type: IsarType.double,
     ),
     r'unitPrice': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'unitPrice',
       type: IsarType.double,
     ),
     r'unitVolumetricWeight': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'unitVolumetricWeight',
       type: IsarType.double,
     ),
     r'unitWeight': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'unitWeight',
       type: IsarType.double,
     )
@@ -81,10 +86,11 @@ void _ticketItemSerialize(
   writer.writeString(offsets[1], object.name);
   writer.writeLong(offsets[2], object.productId);
   writer.writeLong(offsets[3], object.quantity);
-  writer.writeDouble(offsets[4], object.unitCost);
-  writer.writeDouble(offsets[5], object.unitPrice);
-  writer.writeDouble(offsets[6], object.unitVolumetricWeight);
-  writer.writeDouble(offsets[7], object.unitWeight);
+  writer.writeDouble(offsets[4], object.subtotal);
+  writer.writeDouble(offsets[5], object.unitCost);
+  writer.writeDouble(offsets[6], object.unitPrice);
+  writer.writeDouble(offsets[7], object.unitVolumetricWeight);
+  writer.writeDouble(offsets[8], object.unitWeight);
 }
 
 TicketItem _ticketItemDeserialize(
@@ -98,10 +104,11 @@ TicketItem _ticketItemDeserialize(
   object.name = reader.readString(offsets[1]);
   object.productId = reader.readLong(offsets[2]);
   object.quantity = reader.readLong(offsets[3]);
-  object.unitCost = reader.readDouble(offsets[4]);
-  object.unitPrice = reader.readDouble(offsets[5]);
-  object.unitVolumetricWeight = reader.readDoubleOrNull(offsets[6]);
-  object.unitWeight = reader.readDoubleOrNull(offsets[7]);
+  object.subtotal = reader.readDouble(offsets[4]);
+  object.unitCost = reader.readDouble(offsets[5]);
+  object.unitPrice = reader.readDouble(offsets[6]);
+  object.unitVolumetricWeight = reader.readDoubleOrNull(offsets[7]);
+  object.unitWeight = reader.readDoubleOrNull(offsets[8]);
   return object;
 }
 
@@ -125,8 +132,10 @@ P _ticketItemDeserializeProp<P>(
     case 5:
       return (reader.readDouble(offset)) as P;
     case 6:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 7:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 8:
       return (reader.readDoubleOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -499,6 +508,69 @@ extension TicketItemQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketItem, TicketItem, QAfterFilterCondition> subtotalEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subtotal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketItem, TicketItem, QAfterFilterCondition>
+      subtotalGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subtotal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketItem, TicketItem, QAfterFilterCondition> subtotalLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subtotal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketItem, TicketItem, QAfterFilterCondition> subtotalBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subtotal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }

@@ -126,8 +126,18 @@ int _ticketEstimateSize(
       bytesCount += TicketItemSchema.estimateSize(value, offsets, allOffsets);
     }
   }
-  bytesCount += 3 + object.notes.length * 3;
-  bytesCount += 3 + object.phoneNumber.length * 3;
+  {
+    final value = object.notes;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.phoneNumber;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -182,11 +192,11 @@ Ticket _ticketDeserialize(
         TicketItem(),
       ) ??
       [];
-  object.notes = reader.readString(offsets[9]);
-  object.phoneNumber = reader.readString(offsets[10]);
+  object.notes = reader.readStringOrNull(offsets[9]);
+  object.phoneNumber = reader.readStringOrNull(offsets[10]);
   object.status =
       _TicketstatusValueEnumMap[reader.readByteOrNull(offsets[11])] ??
-          TicketStatus.peding;
+          TicketStatus.pending;
   object.subtotal = reader.readDouble(offsets[12]);
   object.total = reader.readDouble(offsets[13]);
   object.type = _TickettypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
@@ -226,12 +236,12 @@ P _ticketDeserializeProp<P>(
           ) ??
           []) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 10:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
       return (_TicketstatusValueEnumMap[reader.readByteOrNull(offset)] ??
-          TicketStatus.peding) as P;
+          TicketStatus.pending) as P;
     case 12:
       return (reader.readDouble(offset)) as P;
     case 13:
@@ -245,12 +255,12 @@ P _ticketDeserializeProp<P>(
 }
 
 const _TicketstatusEnumValueMap = {
-  'peding': 0,
+  'pending': 0,
   'partial': 1,
   'paid': 2,
 };
 const _TicketstatusValueEnumMap = {
-  0: TicketStatus.peding,
+  0: TicketStatus.pending,
   1: TicketStatus.partial,
   2: TicketStatus.paid,
 };
@@ -1094,8 +1104,24 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> notesIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'notes',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> notesIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'notes',
+      ));
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> notesEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1108,7 +1134,7 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> notesGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1123,7 +1149,7 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> notesLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1138,8 +1164,8 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> notesBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1224,8 +1250,24 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> phoneNumberIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'phoneNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> phoneNumberIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'phoneNumber',
+      ));
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> phoneNumberEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1238,7 +1280,7 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> phoneNumberGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1253,7 +1295,7 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> phoneNumberLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1268,8 +1310,8 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
   }
 
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> phoneNumberBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -2099,13 +2141,13 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Ticket, String, QQueryOperations> notesProperty() {
+  QueryBuilder<Ticket, String?, QQueryOperations> notesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notes');
     });
   }
 
-  QueryBuilder<Ticket, String, QQueryOperations> phoneNumberProperty() {
+  QueryBuilder<Ticket, String?, QQueryOperations> phoneNumberProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'phoneNumber');
     });
