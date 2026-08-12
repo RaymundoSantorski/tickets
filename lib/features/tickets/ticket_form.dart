@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tickets/core/models/customer.dart';
+import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
 import 'package:tickets/features/tickets/ticket_item.dart';
 import 'package:tickets/features/tickets/ticket_product_selection_modal.dart';
 
@@ -17,6 +19,8 @@ class _TicketFormState extends State<TicketForm> {
   final TextEditingController discountController = TextEditingController(
     text: '',
   );
+  final TextEditingController notesController = TextEditingController(text: '');
+  Customer? customer;
 
   @override
   Widget build(BuildContext context) {
@@ -80,11 +84,51 @@ class _TicketFormState extends State<TicketForm> {
       calculateSubtotal();
     }
 
+    void onClientSelected(Customer value) {
+      setState(() {
+        customer = value;
+      });
+    }
+
+    void showModal(Widget widget) {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => widget,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text('Nuevo ticket')),
       body: ListView(
         children: [
-          FilledButton(onPressed: () {}, child: Text('Seleccionar cliente')),
+          customer != null
+              ? Card(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(customer!.name),
+                      SizedBox(height: 30),
+                      TextButton(
+                        onPressed: () => showModal(
+                          TicketCustomerSelectionModal(
+                            onSelected: onClientSelected,
+                          ),
+                        ),
+                        child: Text('Cambiar'),
+                      ),
+                    ],
+                  ),
+                )
+              : FilledButton(
+                  onPressed: () => showModal(
+                    TicketCustomerSelectionModal(onSelected: onClientSelected),
+                  ),
+
+                  child: Text('Seleccionar cliente'),
+                ),
           Card(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,16 +161,8 @@ class _TicketFormState extends State<TicketForm> {
             );
           }),
           FilledButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) =>
-                    TicketProductSelectionModal(onSelected: onAdd),
-              );
-            },
+            onPressed: () =>
+                showModal(TicketProductSelectionModal(onSelected: onAdd)),
             child: Text('Agregar producto'),
           ),
           TextField(
@@ -135,10 +171,17 @@ class _TicketFormState extends State<TicketForm> {
               hint: Text('30'),
               prefix: Text('\$'),
             ),
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
             controller: discountController,
             onChanged: setDiscount,
           ),
-          TextField(decoration: InputDecoration(label: Text('Notas'))),
+          TextField(
+            decoration: InputDecoration(
+              label: Text('Notas'),
+              hint: Text('Pagado'),
+            ),
+            controller: notesController,
+          ),
           Card(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

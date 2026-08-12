@@ -22,10 +22,10 @@ class TicketCustomerSelectionModal extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.shopping_bag, color: Colors.blueAccent),
+              const Icon(Icons.person, color: Colors.blueAccent),
               const SizedBox(width: 10),
               Text(
-                'Agregar productos',
+                'Seleccionar cliente',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
