@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'package:tickets/features/tickets/ticket_item.dart';
+import 'package:tickets/core/models/ticket_item.dart';
 part 'ticket.g.dart';
 
 enum TicketStatus { pending, partial, paid }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
-import 'package:tickets/features/tickets/ticket_item.dart';
+import 'package:tickets/core/models/ticket_item.dart';
 import 'package:tickets/features/tickets/ticket_product_selection_modal.dart';
 
 class TicketForm extends StatefulWidget {
@@ -24,6 +24,8 @@ class _TicketFormState extends State<TicketForm> {
 
   @override
   Widget build(BuildContext context) {
+    void onSave() {}
+
     void setTotal() {
       setState(() {
         total = subtotal - discount;

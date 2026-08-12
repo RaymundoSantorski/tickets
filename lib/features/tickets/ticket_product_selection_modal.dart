@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/product.dart';
 import 'package:tickets/features/products/product_provider.dart';
-import 'package:tickets/features/tickets/ticket_item.dart';
+import 'package:tickets/core/models/ticket_item.dart';
 
 class TicketProductSelectionModal extends StatelessWidget {
   const TicketProductSelectionModal({super.key, required this.onSelected});
