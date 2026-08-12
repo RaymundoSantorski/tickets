@@ -5,6 +5,8 @@ import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/clients/customer_repository.dart';
 import 'package:tickets/features/products/product_provider.dart';
 import 'package:tickets/features/products/product_repository.dart';
+import 'package:tickets/features/tickets/ticket_provider.dart';
+import 'package:tickets/features/tickets/ticket_repository.dart';
 import 'package:tickets/services/database_service.dart';
 
 Future<void> main() async {
@@ -14,6 +16,7 @@ Future<void> main() async {
 
   CustomerRepository customerRepository = CustomerRepository(db.isar);
   ProductRepository productRepository = ProductRepository(db.isar);
+  TicketRepository ticketRepository = TicketRepository(db.isar);
 
   runApp(
     MultiProvider(
@@ -24,6 +27,7 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (_) => ProductProvider(productRepository),
         ),
+        ChangeNotifierProvider(create: (_) => TicketProvider(ticketRepository)),
       ],
       child: TicketsApp(),
     ),
