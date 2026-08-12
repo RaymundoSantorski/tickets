@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
+import 'package:tickets/core/models/ticket.dart';
+// import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
 import 'package:tickets/core/models/ticket_item.dart';
 import 'package:tickets/features/tickets/ticket_product_selection_modal.dart';
+import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class TicketForm extends StatefulWidget {
   const TicketForm({super.key});
@@ -24,7 +28,30 @@ class _TicketFormState extends State<TicketForm> {
 
   @override
   Widget build(BuildContext context) {
-    void onSave() {}
+    // CustomerProvider customerDb = context.read<CustomerProvider>();
+    TicketProvider ticketDb = context.read<TicketProvider>();
+
+    void onSave() {
+      if (customer == null) return;
+      Ticket newTicket = Ticket()
+        ..balanceAfter = total
+        ..balanceBefore = 0
+        ..customerId = customer!.id
+        ..date = DateTime.now()
+        ..discount = discount
+        ..displayName = customer!.name
+        ..dueDate = DateTime.now().add(Duration(days: 2))
+        ..fullName = customer!.fullName
+        ..items = ticketProducts
+        ..notes = notesController.text
+        ..phoneNumber = customer!.phoneNumber
+        ..status = TicketStatus.pending
+        ..subtotal = subtotal
+        ..total = total
+        ..type = TicketType.sale;
+      ticketDb.save(newTicket);
+      Navigator.of(context).pop();
+    }
 
     void setTotal() {
       setState(() {
@@ -191,7 +218,7 @@ class _TicketFormState extends State<TicketForm> {
             ),
           ),
           FilledButton(
-            onPressed: () {},
+            onPressed: onSave,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
