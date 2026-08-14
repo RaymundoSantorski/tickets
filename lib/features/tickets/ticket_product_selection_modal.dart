@@ -64,7 +64,13 @@ class TicketProductSelectionModal extends StatelessWidget {
                       ..quantity = 1
                       ..subtotal = product.price
                       ..unitCost = product.cost
-                      ..unitPrice = product.price;
+                      ..unitPrice = product.price
+                      ..unitWeight = product.weight
+                      ..unitVolumetricWeight =
+                          (product.length ?? 0) *
+                          (product.height ?? 0) *
+                          (product.width ?? 0) /
+                          5000;
                     onSelected(item);
                     Navigator.pop(context);
                   },

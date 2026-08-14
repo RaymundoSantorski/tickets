@@ -8,6 +8,7 @@ class Customer {
   late String name;
   String? phoneNumber;
   Address? address;
+  double balance = 0;
   int pendingItems = 0;
   double pendingWeight = 0;
   double pendingVolumetricWeight = 0;

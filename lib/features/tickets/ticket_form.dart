@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
+import 'package:tickets/features/clients/customer_provider.dart';
 // import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
 import 'package:tickets/core/models/ticket_item.dart';
@@ -28,14 +29,15 @@ class _TicketFormState extends State<TicketForm> {
 
   @override
   Widget build(BuildContext context) {
-    // CustomerProvider customerDb = context.read<CustomerProvider>();
+    CustomerProvider customerDb = context.read<CustomerProvider>();
     TicketProvider ticketDb = context.read<TicketProvider>();
 
     void onSave() {
       if (customer == null) return;
+      double before = customer!.balance;
       Ticket newTicket = Ticket()
-        ..balanceAfter = total
-        ..balanceBefore = 0
+        ..balanceAfter = before + total
+        ..balanceBefore = before
         ..customerId = customer!.id
         ..date = DateTime.now()
         ..discount = discount
@@ -49,6 +51,24 @@ class _TicketFormState extends State<TicketForm> {
         ..subtotal = subtotal
         ..total = total
         ..type = TicketType.sale;
+      customer!.balance = before + total;
+      customer!.pendingItems =
+          customer!.pendingItems +
+          ticketProducts.fold(0, (last, item) => last + item.quantity);
+      customer!.pendingWeight =
+          customer!.pendingWeight +
+          ticketProducts.fold(
+            0.0,
+            (last, item) => (item.unitWeight ?? 0) * item.quantity + last,
+          );
+      customer!.pendingVolumetricWeight =
+          customer!.pendingVolumetricWeight +
+          ticketProducts.fold(
+            0.0,
+            (last, item) =>
+                (item.unitVolumetricWeight ?? 0) * item.quantity + last,
+          );
+      customerDb.save(customer!);
       ticketDb.save(newTicket);
       Navigator.of(context).pop();
     }

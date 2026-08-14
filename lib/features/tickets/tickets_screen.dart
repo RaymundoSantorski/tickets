@@ -48,7 +48,7 @@ class TicketsScreen extends StatelessWidget {
                       children: [
                         Text(ticket.displayName),
                         SizedBox(height: 40),
-                        Text('${ticket.total}'),
+                        Text('${ticket.balanceAfter}'),
                       ],
                     ),
                     Row(
