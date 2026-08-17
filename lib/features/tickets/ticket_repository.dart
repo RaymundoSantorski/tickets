@@ -27,6 +27,10 @@ class TicketRepository {
     return await isar.tickets.where().findAll();
   }
 
+  Future<List<Ticket>> getTickets(Id id) async {
+    return await isar.tickets.filter().customerIdEqualTo(id).findAll();
+  }
+
   // Future<List<Ticket>> search(String query) async {
   //   List<Ticket> codeProducts = await isar.tickets
   //       .filter()

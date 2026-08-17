@@ -30,6 +30,10 @@ class TicketProvider extends ChangeNotifier {
     return await db.get(id);
   }
 
+  Future<List<Ticket>> getTickets(int id) async {
+    return await db.getTickets(id);
+  }
+
   // Future<void> search(String query) async {
   //   if (query.isNotEmpty) {
   //     tickets = await db.search(query);
