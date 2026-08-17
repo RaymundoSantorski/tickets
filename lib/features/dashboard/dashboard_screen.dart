@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:tickets/features/dashboard/widgets/dashboard_item.dart';
 
 class DashboardScreen extends StatelessWidget {
