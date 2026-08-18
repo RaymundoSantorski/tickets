@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/tickets/ticket_card.dart';
+import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
@@ -21,13 +22,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     super.initState();
     TicketProvider db = context.read<TicketProvider>();
     loadTickets(db);
+    db.addListener(() {
+      loadTickets(db);
+    });
   }
 
   Future<void> loadTickets(TicketProvider db) async {
     List<Ticket> customerTickets = await db.getTickets(widget.customer.id);
-    setState(() {
-      tickets = customerTickets;
-    });
+    if (mounted) {
+      setState(() {
+        tickets = customerTickets;
+      });
+    }
   }
 
   @override
@@ -45,7 +51,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ),
           ],
         ),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.add))],
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TicketForm(initCustomer: widget.customer),
+                ),
+              );
+            },
+            icon: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: ListView(
         children: [
