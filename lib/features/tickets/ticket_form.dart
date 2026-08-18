@@ -10,7 +10,8 @@ import 'package:tickets/features/tickets/ticket_product_selection_modal.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class TicketForm extends StatefulWidget {
-  const TicketForm({super.key});
+  const TicketForm({super.key, this.initCustomer});
+  final Customer? initCustomer;
 
   @override
   State<TicketForm> createState() => _TicketFormState();
@@ -26,6 +27,16 @@ class _TicketFormState extends State<TicketForm> {
   );
   final TextEditingController notesController = TextEditingController(text: '');
   Customer? customer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initCustomer != null) {
+      setState(() {
+        customer = widget.initCustomer;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
