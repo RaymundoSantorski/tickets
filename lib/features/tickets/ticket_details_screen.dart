@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tickets/core/models/ticket.dart';
+import 'package:tickets/features/tickets/ticket_form.dart';
 
 class TicketDetailsScreen extends StatelessWidget {
   const TicketDetailsScreen({super.key, required this.ticket});
@@ -18,7 +19,19 @@ class TicketDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Ticket: ${ticket.id}')),
+      appBar: AppBar(
+        title: Text('Ticket: ${ticket.id}'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => TicketForm(ticket: ticket)),
+              );
+            },
+            icon: const Icon(Icons.edit),
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Card(
