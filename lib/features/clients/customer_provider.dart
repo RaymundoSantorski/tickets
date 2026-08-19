@@ -19,6 +19,10 @@ class CustomerProvider extends ChangeNotifier {
     }
   }
 
+  Future<Customer?> get(int id) async {
+    return await repository.get(id);
+  }
+
   Future<void> load() async {
     customers = await repository.getAll();
     notifyListeners();
