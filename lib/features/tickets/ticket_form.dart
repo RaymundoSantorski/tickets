@@ -3,21 +3,22 @@ import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
-// import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
 import 'package:tickets/core/models/ticket_item.dart';
 import 'package:tickets/features/tickets/ticket_product_selection_modal.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class TicketForm extends StatefulWidget {
-  const TicketForm({super.key, this.initCustomer});
+  const TicketForm({super.key, this.initCustomer, this.ticket});
   final Customer? initCustomer;
+  final Ticket? ticket;
 
   @override
   State<TicketForm> createState() => _TicketFormState();
 }
 
 class _TicketFormState extends State<TicketForm> {
+  String title = 'Nuevo ticket';
   final List<TicketItem> ticketProducts = [];
   double subtotal = 0;
   double discount = 0;
@@ -27,13 +28,63 @@ class _TicketFormState extends State<TicketForm> {
   );
   final TextEditingController notesController = TextEditingController(text: '');
   Customer? customer;
+  double? lastTicketTotal;
+  double? lastTicketWeight;
+  double? lastTicketVolWeight;
+  int? ticketPendingItems;
+
+  double calculateWeight(List<TicketItem> items) {
+    return items.fold(
+      0.0,
+      (last, item) => (item.unitWeight ?? 0) * item.quantity + last,
+    );
+  }
+
+  double calculateVolWeight(List<TicketItem> items) {
+    return items.fold(
+      0.0,
+      (last, item) => (item.unitVolumetricWeight ?? 0) * item.quantity + last,
+    );
+  }
+
+  int calculatePendingItems(List<TicketItem> items) {
+    return items.fold(0, (last, item) => item.quantity + last);
+  }
 
   @override
   void initState() {
     super.initState();
+    CustomerProvider customerDb = context.read<CustomerProvider>();
     if (widget.initCustomer != null) {
       setState(() {
         customer = widget.initCustomer;
+      });
+    }
+    if (widget.ticket != null) {
+      setState(() {
+        ticketProducts.addAll(widget.ticket!.items);
+        subtotal = widget.ticket!.subtotal;
+        discount = widget.ticket!.discount;
+        total = widget.ticket!.total;
+        discountController.text = '$discount';
+        notesController.text = widget.ticket!.notes ?? '';
+        title = 'Ticket - ${widget.ticket!.id}';
+        lastTicketTotal = widget.ticket!.total;
+        lastTicketWeight = calculateWeight(widget.ticket!.items);
+        lastTicketVolWeight = calculateVolWeight(widget.ticket!.items);
+        ticketPendingItems = calculatePendingItems(widget.ticket!.items);
+      });
+      setCustomer(widget.ticket!.customerId, customerDb);
+    }
+  }
+
+  Future<void> setCustomer(int id, CustomerProvider db) async {
+    Customer? freshCustomer = await db.get(id);
+    if (freshCustomer == null) {
+      throw Exception('Must provide a valid customer');
+    } else {
+      setState(() {
+        customer = freshCustomer;
       });
     }
   }
@@ -45,40 +96,66 @@ class _TicketFormState extends State<TicketForm> {
 
     void onSave() {
       if (customer == null) return;
-      double before = customer!.balance;
-      Ticket newTicket = Ticket()
-        ..balanceAfter = before + total
-        ..balanceBefore = before
-        ..customerId = customer!.id
-        ..date = DateTime.now()
-        ..discount = discount
-        ..displayName = customer!.name
-        ..dueDate = DateTime.now().add(Duration(days: 2))
-        ..fullName = customer!.fullName
-        ..items = ticketProducts
-        ..notes = notesController.text
-        ..phoneNumber = customer!.phoneNumber
-        ..status = TicketStatus.pending
-        ..subtotal = subtotal
-        ..total = total
-        ..type = TicketType.sale;
-      customer!.balance = before + total;
-      customer!.pendingItems =
-          customer!.pendingItems +
-          ticketProducts.fold(0, (last, item) => last + item.quantity);
-      customer!.pendingWeight =
-          customer!.pendingWeight +
-          ticketProducts.fold(
-            0.0,
-            (last, item) => (item.unitWeight ?? 0) * item.quantity + last,
-          );
-      customer!.pendingVolumetricWeight =
-          customer!.pendingVolumetricWeight +
-          ticketProducts.fold(
-            0.0,
-            (last, item) =>
-                (item.unitVolumetricWeight ?? 0) * item.quantity + last,
-          );
+      Ticket newTicket;
+      if (widget.ticket != null) {
+        debugPrint(
+          'Old ticket items: ${calculatePendingItems(widget.ticket!.items)}',
+        );
+        debugPrint('Customer pending items: ${customer!.pendingItems}');
+        debugPrint(
+          'New ticket items: ${calculatePendingItems(ticketProducts)}',
+        );
+        debugPrint(
+          'newPendingItems: ${customer!.pendingItems - ticketPendingItems! + calculatePendingItems(ticketProducts)}',
+        );
+        newTicket = widget.ticket!
+          ..balanceAfter =
+              widget.ticket!.balanceAfter - lastTicketTotal! + total
+          ..discount = discount
+          ..items = ticketProducts
+          ..notes = notesController.text
+          ..subtotal = subtotal
+          ..total = total;
+        customer!.balance = customer!.balance - lastTicketTotal! + total;
+        customer!.pendingItems =
+            customer!.pendingItems -
+            ticketPendingItems! +
+            calculatePendingItems(ticketProducts);
+        customer!.pendingWeight =
+            customer!.pendingWeight -
+            lastTicketWeight! +
+            calculateWeight(ticketProducts);
+        customer!.pendingVolumetricWeight =
+            customer!.pendingVolumetricWeight -
+            lastTicketVolWeight! +
+            calculateVolWeight(ticketProducts);
+      } else {
+        double before = customer!.balance;
+        newTicket = Ticket()
+          ..balanceAfter = before + total
+          ..balanceBefore = before
+          ..customerId = customer!.id
+          ..date = DateTime.now()
+          ..discount = discount
+          ..displayName = customer!.name
+          ..dueDate = DateTime.now().add(Duration(days: 2))
+          ..fullName = customer!.fullName
+          ..items = ticketProducts
+          ..notes = notesController.text
+          ..phoneNumber = customer!.phoneNumber
+          ..status = TicketStatus.pending
+          ..subtotal = subtotal
+          ..total = total
+          ..type = TicketType.sale;
+        customer!.balance = before + total;
+        customer!.pendingItems =
+            customer!.pendingItems + calculatePendingItems(ticketProducts);
+        customer!.pendingWeight =
+            customer!.pendingWeight + calculateWeight(ticketProducts);
+        customer!.pendingVolumetricWeight =
+            customer!.pendingVolumetricWeight +
+            calculateVolWeight(ticketProducts);
+      }
       customerDb.save(customer!);
       ticketDb.save(newTicket);
       Navigator.of(context).pop();
@@ -161,7 +238,7 @@ class _TicketFormState extends State<TicketForm> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Nuevo ticket')),
+      appBar: AppBar(title: Text(title)),
       body: ListView(
         children: [
           customer != null
