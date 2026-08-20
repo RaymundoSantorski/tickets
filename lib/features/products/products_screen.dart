@@ -121,96 +121,114 @@ class _ProductsScreenState extends State<ProductsScreen> {
         onPressed: onPressed,
         child: Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          Card(
-            child: Row(
+      body: products.isNotEmpty
+          ? Column(
               children: [
-                ChoiceChip(
-                  label: Text('Todo'),
-                  selected: active == null,
-                  onSelected: (_) => filter(null),
-                ),
-                ChoiceChip(
-                  label: Text('Activo'),
-                  selected: active == true,
-                  onSelected: (_) => filter(true),
-                ),
-                ChoiceChip(
-                  label: Text('Inactivo'),
-                  selected: active == false,
-                  onSelected: (_) => filter(false),
-                ),
-              ],
-            ),
-          ),
-          Card(
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: (value) => search(value),
+                Card(
+                  child: Row(
+                    children: [
+                      ChoiceChip(
+                        label: Text('Todo'),
+                        selected: active == null,
+                        onSelected: (_) => filter(null),
+                      ),
+                      ChoiceChip(
+                        label: Text('Activo'),
+                        selected: active == true,
+                        onSelected: (_) => filter(true),
+                      ),
+                      ChoiceChip(
+                        label: Text('Inactivo'),
+                        selected: active == false,
+                        onSelected: (_) => filter(false),
+                      ),
+                    ],
                   ),
                 ),
-                IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                Product product = products[index];
-                return Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ProductDetailsScreen(product: product),
-                            ),
-                          );
-                        },
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                Icon(Icons.person, size: 30.0),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                Card(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: searchController,
+                          onChanged: (value) => search(value),
+                        ),
+                      ),
+                      IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      Product product = products[index];
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ProductDetailsScreen(product: product),
+                                  ),
+                                );
+                              },
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
                                     children: [
-                                      Text(product.name),
-                                      Text(product.code),
+                                      Icon(Icons.person, size: 30.0),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(product.name),
+                                            Text(product.code),
+                                          ],
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => confirmDelete(context, db, product),
-                      icon: Icon(Icons.delete),
-                    ),
-                    IconButton(
-                      onPressed: () => onPressed(product: product),
-                      icon: Icon(Icons.edit),
-                    ),
-                  ],
-                );
-              },
+                          IconButton(
+                            onPressed: () =>
+                                confirmDelete(context, db, product),
+                            icon: Icon(Icons.delete),
+                          ),
+                          IconButton(
+                            onPressed: () => onPressed(product: product),
+                            icon: Icon(Icons.edit),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            )
+          : Center(
+              child: Column(
+                children: [
+                  Text('No hay productos'),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => AddProductScreen()),
+                      );
+                    },
+                    child: Text('Agregar producto'),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }
