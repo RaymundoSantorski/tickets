@@ -146,7 +146,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
-                                  CustomerDetailScreen(customer: customer),
+                                  CustomerDetailScreen(customerId: customer.id),
                             ),
                           );
                         },

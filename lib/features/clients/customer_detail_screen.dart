@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
+import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/tickets/ticket_card.dart';
 import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
-  const CustomerDetailScreen({super.key, required this.customer});
-  final Customer customer;
+  const CustomerDetailScreen({super.key, required this.customerId});
+  final int customerId;
 
   @override
   State<CustomerDetailScreen> createState() => _CustomerDetailScreenState();
@@ -16,19 +17,36 @@ class CustomerDetailScreen extends StatefulWidget {
 
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   List<Ticket> tickets = [];
+  Customer? customer;
 
   @override
   void initState() {
     super.initState();
-    TicketProvider db = context.read<TicketProvider>();
-    loadTickets(db);
-    db.addListener(() {
-      loadTickets(db);
+    TicketProvider ticketDb = context.read<TicketProvider>();
+    CustomerProvider customerDb = context.read<CustomerProvider>();
+    setCustomer(customerDb);
+    customerDb.addListener(() {
+      setCustomer(customerDb);
+    });
+    loadTickets(ticketDb);
+    ticketDb.addListener(() {
+      loadTickets(ticketDb);
+    });
+  }
+
+  Future<void> setCustomer(CustomerProvider db) async {
+    debugPrint('Customer id: ${widget.customerId}');
+    Customer? freshCustomer = await db.get(widget.customerId);
+    if (freshCustomer == null) {
+      throw Exception('No se encontró el cliente');
+    }
+    setState(() {
+      customer = freshCustomer;
     });
   }
 
   Future<void> loadTickets(TicketProvider db) async {
-    List<Ticket> customerTickets = await db.getTickets(widget.customer.id);
+    List<Ticket> customerTickets = await db.getTickets(widget.customerId);
     if (mounted) {
       setState(() {
         tickets = customerTickets;
@@ -42,11 +60,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       appBar: AppBar(
         title: Column(
           children: [
-            Text(widget.customer.name),
+            Text(customer?.name ?? ''),
             Text(
-              '\$ ${widget.customer.balance}',
+              '\$ ${customer?.balance ?? ''}',
               style: TextStyle(
-                color: widget.customer.balance <= 0 ? Colors.green : Colors.red,
+                color: (customer?.balance ?? 0) <= 0
+                    ? Colors.green
+                    : Colors.red,
               ),
             ),
           ],
@@ -56,7 +76,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => TicketForm(initCustomer: widget.customer),
+                  builder: (_) => TicketForm(initCustomer: customer),
                 ),
               );
             },
@@ -72,21 +92,19 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               children: [
                 Column(
                   children: [
-                    Text('${widget.customer.pendingItems}'),
+                    Text('${customer?.pendingItems ?? ''}'),
                     Text('Cant. prendas'),
                   ],
                 ),
                 Column(
                   children: [
-                    Text('${widget.customer.pendingWeight.ceil()} kg'),
+                    Text('${customer?.pendingWeight.ceil()} kg'),
                     Text('Peso total'),
                   ],
                 ),
                 Column(
                   children: [
-                    Text(
-                      '${widget.customer.pendingVolumetricWeight.ceil()} kg.',
-                    ),
+                    Text('${customer?.pendingVolumetricWeight.ceil()} kg.'),
                     Text('P.V. Total'),
                   ],
                 ),
@@ -119,7 +137,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    TicketForm(initCustomer: widget.customer),
+                                    TicketForm(initCustomer: customer),
                               ),
                             );
                           },

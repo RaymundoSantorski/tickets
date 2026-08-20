@@ -17,3 +17,10 @@ double calculateVolWeight(List<TicketItem> items) {
 int calculatePendingItems(List<TicketItem> items) {
   return items.fold(0, (last, item) => item.quantity + last);
 }
+
+double calculateSubtotal(List<TicketItem> items) {
+  return items.fold(
+    0.0,
+    (last, item) => (item.unitPrice * item.quantity) + last,
+  );
+}

@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
+import 'package:tickets/features/clients/customer_provider.dart';
+import 'package:tickets/features/tickets/helpers/calculate.dart';
 import 'package:tickets/features/tickets/ticket_details_screen.dart';
 import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
 Future<void> confirmDelete(
   BuildContext context,
-  TicketProvider db,
+  TicketProvider ticketDb,
+  CustomerProvider customerDb,
   Ticket ticket,
 ) async {
+  Customer? customer = await customerDb.get(ticket.customerId);
+  double customerBalance = customer?.balance ?? 0;
+  int customerPendingItems = customer?.pendingItems ?? 0;
+  double customerPendingWeight = customer?.pendingWeight ?? 0;
+  double customerPendingVolumetricWeight =
+      customer?.pendingVolumetricWeight ?? 0;
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -55,8 +65,19 @@ Future<void> confirmDelete(
             child: const Text('Eliminar'),
             onPressed: () async {
               Navigator.of(context).pop();
-
-              await db.delete(ticket.id);
+              Customer? customer = await customerDb.get(ticket.customerId);
+              if (customer != null) {
+                double weight = calculateWeight(ticket.items);
+                double volWeight = calculateVolWeight(ticket.items);
+                int items = calculatePendingItems(ticket.items);
+                customer.balance = customerBalance - ticket.total;
+                customer.pendingItems = customerPendingItems - items;
+                customer.pendingWeight = customerPendingWeight - weight;
+                customer.pendingVolumetricWeight =
+                    customerPendingVolumetricWeight - volWeight;
+                customerDb.save(customer);
+              }
+              await ticketDb.delete(ticket.id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -69,7 +90,15 @@ Future<void> confirmDelete(
                       label: 'Deshacer',
                       textColor: Colors.white,
                       onPressed: () {
-                        db.save(ticket);
+                        if (customer != null) {
+                          customer.pendingItems = customerPendingItems;
+                          customer.pendingWeight = customerPendingWeight;
+                          customer.pendingVolumetricWeight =
+                              customerPendingVolumetricWeight;
+                          customer.balance = customerBalance;
+                          customerDb.save(customer);
+                        }
+                        ticketDb.save(ticket);
                       },
                     ),
                     backgroundColor: Colors.redAccent,
@@ -86,6 +115,7 @@ Future<void> confirmDelete(
 
 Widget ticketCard(Ticket ticket, BuildContext context) {
   TicketProvider ticketDb = context.read<TicketProvider>();
+  CustomerProvider customerDb = context.read<CustomerProvider>();
   return Slidable(
     endActionPane: ActionPane(
       motion: const ScrollMotion(),
@@ -106,7 +136,7 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
         ),
         SlidableAction(
           onPressed: (context) {
-            confirmDelete(context, ticketDb, ticket);
+            confirmDelete(context, ticketDb, customerDb, ticket);
           },
           backgroundColor: Colors.red,
           borderRadius: BorderRadius.only(
