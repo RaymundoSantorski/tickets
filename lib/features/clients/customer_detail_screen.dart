@@ -64,7 +64,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: Column(
         children: [
           Card(
             child: Row(
@@ -93,10 +93,42 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ],
             ),
           ),
-          Text('Historial', textAlign: TextAlign.center),
-          ...tickets.map((ticket) {
-            return ticketCard(ticket, context);
-          }),
+          tickets.isNotEmpty
+              ? Expanded(
+                  child: ListView(
+                    children: [
+                      Column(
+                        children: [
+                          Text('Historial', textAlign: TextAlign.center),
+                          ...tickets.map((ticket) {
+                            return ticketCard(ticket, context);
+                          }),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+              : Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('No hay tickets'),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    TicketForm(initCustomer: widget.customer),
+                              ),
+                            );
+                          },
+                          child: Text('Agregar ticket'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
         ],
       ),
     );
