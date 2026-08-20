@@ -118,70 +118,86 @@ class _CustomersScreenState extends State<CustomersScreen> {
         onPressed: onPressed,
         child: Icon(Icons.add),
       ),
-      body: ListView.builder(
-        itemCount: customers.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return Card(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: (value) => search(value),
+      body: customers.isNotEmpty
+          ? ListView.builder(
+              itemCount: customers.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Card(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: searchController,
+                            onChanged: (value) => search(value),
+                          ),
+                        ),
+                        IconButton(onPressed: () {}, icon: Icon(Icons.search)),
+                      ],
                     ),
-                  ),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-                ],
-              ),
-            );
-          }
-          Customer customer = customers[index - 1];
-          return Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            CustomerDetailScreen(customer: customer),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.person, size: 30.0),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                  );
+                }
+                Customer customer = customers[index - 1];
+                return Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CustomerDetailScreen(customer: customer),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
                               children: [
-                                Text(customer.name),
-                                Text(customer.fullName),
+                                Icon(Icons.person, size: 30.0),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(customer.name),
+                                      Text(customer.fullName),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
+                    IconButton(
+                      onPressed: () => confirmDelete(context, db, customer),
+                      icon: Icon(Icons.delete),
+                    ),
+                    IconButton(
+                      onPressed: () => onPressed(customer: customer),
+                      icon: Icon(Icons.edit),
+                    ),
+                  ],
+                );
+              },
+            )
+          : Center(
+              child: Column(
+                children: [
+                  Text('No hay clientes'),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => AddCustomerScreen()),
+                      );
+                    },
+                    child: Text('Agregar cliente'),
                   ),
-                ),
+                ],
               ),
-              IconButton(
-                onPressed: () => confirmDelete(context, db, customer),
-                icon: Icon(Icons.delete),
-              ),
-              IconButton(
-                onPressed: () => onPressed(customer: customer),
-                icon: Icon(Icons.edit),
-              ),
-            ],
-          );
-        },
-      ),
+            ),
     );
   }
 }
