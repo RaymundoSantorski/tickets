@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/tickets/ticket_card.dart';
-import 'package:tickets/features/tickets/ticket_details_screen.dart';
 import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
@@ -23,13 +22,30 @@ class TicketsScreen extends StatelessWidget {
         },
         child: const Icon(Icons.add),
       ),
-      body: ListView.builder(
-        itemBuilder: (context, index) {
-          Ticket ticket = tickets[index];
-          return ticketCard(ticket, context);
-        },
-        itemCount: tickets.length,
-      ),
+      body: tickets.isNotEmpty
+          ? ListView.builder(
+              itemBuilder: (context, index) {
+                Ticket ticket = tickets[index];
+                return ticketCard(ticket, context);
+              },
+              itemCount: tickets.length,
+            )
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('No hay tickets'),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(
+                        context,
+                      ).push(MaterialPageRoute(builder: (_) => TicketForm()));
+                    },
+                    child: Text('Agregar ticket'),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

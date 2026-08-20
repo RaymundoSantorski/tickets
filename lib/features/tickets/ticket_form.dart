@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
+import 'package:tickets/features/tickets/helpers/calculate.dart';
 import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
 import 'package:tickets/core/models/ticket_item.dart';
 import 'package:tickets/features/tickets/ticket_product_selection_modal.dart';
@@ -32,24 +33,6 @@ class _TicketFormState extends State<TicketForm> {
   double? lastTicketWeight;
   double? lastTicketVolWeight;
   int? ticketPendingItems;
-
-  double calculateWeight(List<TicketItem> items) {
-    return items.fold(
-      0.0,
-      (last, item) => (item.unitWeight ?? 0) * item.quantity + last,
-    );
-  }
-
-  double calculateVolWeight(List<TicketItem> items) {
-    return items.fold(
-      0.0,
-      (last, item) => (item.unitVolumetricWeight ?? 0) * item.quantity + last,
-    );
-  }
-
-  int calculatePendingItems(List<TicketItem> items) {
-    return items.fold(0, (last, item) => item.quantity + last);
-  }
 
   @override
   void initState() {
