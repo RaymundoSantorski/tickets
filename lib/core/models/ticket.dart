@@ -6,6 +6,8 @@ enum TicketStatus { pending, partial, paid }
 
 enum TicketType { sale, payment, shipment }
 
+enum PaymentMethod { transfer, cash, other, none }
+
 @collection
 class Ticket {
   Id id = Isar.autoIncrement;
@@ -14,7 +16,7 @@ class Ticket {
   late String fullName;
   String? phoneNumber;
   late DateTime date;
-  late DateTime dueDate;
+  DateTime? dueDate;
   @enumerated
   late TicketType type;
   @enumerated
@@ -24,6 +26,10 @@ class Ticket {
   late double balanceAfter;
   late double subtotal;
   late double total;
+
+  @enumerated
+  PaymentMethod paymentMethod = PaymentMethod.none;
+
   String? notes;
   List<TicketItem> items = [];
 }
