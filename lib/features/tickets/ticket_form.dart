@@ -19,7 +19,7 @@ class TicketForm extends StatefulWidget {
 }
 
 class _TicketFormState extends State<TicketForm> {
-  String title = 'Nuevo ticket';
+  String title = 'Nueva venta';
   final List<TicketItem> ticketProducts = [];
   double subtotal = 0;
   double discount = 0;
