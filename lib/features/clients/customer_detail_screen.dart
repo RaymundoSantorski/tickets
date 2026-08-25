@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
+import 'package:tickets/features/tickets/payment_form.dart';
 import 'package:tickets/features/tickets/ticket_card.dart';
 import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
@@ -57,6 +59,41 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        type: ExpandableFabType.fan,
+        pos: ExpandableFabPos.right,
+        fanAngle: 90,
+        children: [
+          FloatingActionButton.small(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PaymentForm(initCustomer: customer),
+                ),
+              );
+            },
+            heroTag: null,
+            child: const Icon(Icons.payment),
+          ),
+          FloatingActionButton.small(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TicketForm(initCustomer: customer),
+                ),
+              );
+            },
+            heroTag: null,
+            child: const Icon(Icons.sell),
+          ),
+          FloatingActionButton.small(
+            onPressed: () {},
+            heroTag: null,
+            child: const Icon(Icons.local_shipping),
+          ),
+        ],
+      ),
       appBar: AppBar(
         title: Column(
           children: [
