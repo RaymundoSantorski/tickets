@@ -43,6 +43,7 @@ dependencies:
   uuid: ^4.6.0
   path_provider: ^2.1.6
   flutter_slidable: ^4.0.3
+  flutter_expandable_fab: ^2.5.2
 
 dev_dependencies:
   flutter_test:
