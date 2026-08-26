@@ -42,9 +42,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     if (freshCustomer == null) {
       throw Exception('No se encontró el cliente');
     }
-    setState(() {
-      customer = freshCustomer;
-    });
+    if (mounted) {
+      setState(() {
+        customer = freshCustomer;
+      });
+    }
   }
 
   Future<void> loadTickets(TicketProvider db) async {
