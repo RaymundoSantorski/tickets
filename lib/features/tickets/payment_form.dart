@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
-import 'package:tickets/features/tickets/helpers/calculate.dart';
 import 'package:tickets/features/tickets/payment_customer_selection_modal.dart';
 import 'package:tickets/features/tickets/ticket_customer_selection_modal.dart';
+import 'package:tickets/features/tickets/ticket_details_screen.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class PaymentForm extends StatefulWidget {
@@ -91,7 +91,12 @@ class _PaymentFormState extends State<PaymentForm> {
       }
       customerDb.save(customer!);
       ticketDb.save(newTicket);
-      Navigator.of(context).pop();
+      // Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => TicketDetailsScreen(ticket: newTicket),
+        ),
+      );
     }
 
     void setTotal(String value) {
