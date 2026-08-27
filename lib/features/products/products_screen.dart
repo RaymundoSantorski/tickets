@@ -216,6 +216,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             )
           : Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('No hay productos'),
                   TextButton(
