@@ -36,7 +36,7 @@ class _PaymentFormState extends State<PaymentForm> {
     }
     if (widget.ticket != null) {
       setState(() {
-        total = widget.ticket!.total;
+        total = -widget.ticket!.total;
         notesController.text = widget.ticket!.notes ?? '';
         title = 'Pago - ${widget.ticket!.id}';
         lastTicketTotal = widget.ticket!.total;
@@ -68,9 +68,9 @@ class _PaymentFormState extends State<PaymentForm> {
       if (widget.ticket != null) {
         newTicket = widget.ticket!
           ..balanceAfter =
-              widget.ticket!.balanceAfter + lastTicketTotal! - total
+              widget.ticket!.balanceAfter - lastTicketTotal! - total
           ..notes = notesController.text
-          ..total = total;
+          ..total = -total;
       } else {
         double before = customer!.balance;
         newTicket = Ticket()
@@ -80,12 +80,12 @@ class _PaymentFormState extends State<PaymentForm> {
           ..date = DateTime.now()
           ..discount = 0
           ..status = TicketStatus.paid
-          ..subtotal = total
+          ..subtotal = -total
           ..displayName = customer!.name
           ..fullName = customer!.fullName
           ..notes = notesController.text
           ..phoneNumber = customer!.phoneNumber
-          ..total = total
+          ..total = -total
           ..type = TicketType.payment;
         customer!.balance = before - total;
       }
