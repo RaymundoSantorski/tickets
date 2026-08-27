@@ -185,6 +185,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             )
           : Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('No hay clientes'),
                   TextButton(
