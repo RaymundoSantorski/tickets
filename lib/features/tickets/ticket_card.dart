@@ -171,7 +171,7 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
                 children: [
                   Text(ticket.displayName),
                   SizedBox(height: 40),
-                  Text('${ticket.balanceAfter}'),
+                  Text('${ticket.total}'),
                 ],
               ),
               Row(
