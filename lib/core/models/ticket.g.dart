@@ -68,35 +68,40 @@ const TicketSchema = CollectionSchema(
       name: r'notes',
       type: IsarType.string,
     ),
-    r'paymentMethod': PropertySchema(
+    r'paidAmount': PropertySchema(
       id: 10,
+      name: r'paidAmount',
+      type: IsarType.double,
+    ),
+    r'paymentMethod': PropertySchema(
+      id: 11,
       name: r'paymentMethod',
       type: IsarType.byte,
       enumMap: _TicketpaymentMethodEnumValueMap,
     ),
     r'phoneNumber': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'phoneNumber',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'status',
       type: IsarType.byte,
       enumMap: _TicketstatusEnumValueMap,
     ),
     r'subtotal': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'subtotal',
       type: IsarType.double,
     ),
     r'total': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'total',
       type: IsarType.double,
     ),
     r'type': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'type',
       type: IsarType.byte,
       enumMap: _TickettypeEnumValueMap,
@@ -168,12 +173,13 @@ void _ticketSerialize(
     object.items,
   );
   writer.writeString(offsets[9], object.notes);
-  writer.writeByte(offsets[10], object.paymentMethod.index);
-  writer.writeString(offsets[11], object.phoneNumber);
-  writer.writeByte(offsets[12], object.status.index);
-  writer.writeDouble(offsets[13], object.subtotal);
-  writer.writeDouble(offsets[14], object.total);
-  writer.writeByte(offsets[15], object.type.index);
+  writer.writeDouble(offsets[10], object.paidAmount);
+  writer.writeByte(offsets[11], object.paymentMethod.index);
+  writer.writeString(offsets[12], object.phoneNumber);
+  writer.writeByte(offsets[13], object.status.index);
+  writer.writeDouble(offsets[14], object.subtotal);
+  writer.writeDouble(offsets[15], object.total);
+  writer.writeByte(offsets[16], object.type.index);
 }
 
 Ticket _ticketDeserialize(
@@ -200,16 +206,17 @@ Ticket _ticketDeserialize(
       ) ??
       [];
   object.notes = reader.readStringOrNull(offsets[9]);
+  object.paidAmount = reader.readDouble(offsets[10]);
   object.paymentMethod =
-      _TicketpaymentMethodValueEnumMap[reader.readByteOrNull(offsets[10])] ??
+      _TicketpaymentMethodValueEnumMap[reader.readByteOrNull(offsets[11])] ??
           PaymentMethod.transfer;
-  object.phoneNumber = reader.readStringOrNull(offsets[11]);
+  object.phoneNumber = reader.readStringOrNull(offsets[12]);
   object.status =
-      _TicketstatusValueEnumMap[reader.readByteOrNull(offsets[12])] ??
+      _TicketstatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
           TicketStatus.pending;
-  object.subtotal = reader.readDouble(offsets[13]);
-  object.total = reader.readDouble(offsets[14]);
-  object.type = _TickettypeValueEnumMap[reader.readByteOrNull(offsets[15])] ??
+  object.subtotal = reader.readDouble(offsets[14]);
+  object.total = reader.readDouble(offsets[15]);
+  object.type = _TickettypeValueEnumMap[reader.readByteOrNull(offsets[16])] ??
       TicketType.sale;
   return object;
 }
@@ -248,18 +255,20 @@ P _ticketDeserializeProp<P>(
     case 9:
       return (reader.readStringOrNull(offset)) as P;
     case 10:
+      return (reader.readDouble(offset)) as P;
+    case 11:
       return (_TicketpaymentMethodValueEnumMap[reader.readByteOrNull(offset)] ??
           PaymentMethod.transfer) as P;
-    case 11:
-      return (reader.readStringOrNull(offset)) as P;
     case 12:
+      return (reader.readStringOrNull(offset)) as P;
+    case 13:
       return (_TicketstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketStatus.pending) as P;
-    case 13:
-      return (reader.readDouble(offset)) as P;
     case 14:
       return (reader.readDouble(offset)) as P;
     case 15:
+      return (reader.readDouble(offset)) as P;
+    case 16:
       return (_TickettypeValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketType.sale) as P;
     default:
@@ -1291,6 +1300,68 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> paidAmountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'paidAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> paidAmountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'paidAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> paidAmountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'paidAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> paidAmountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'paidAmount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> paymentMethodEqualTo(
       PaymentMethod value) {
     return QueryBuilder.apply(this, (query) {
@@ -1841,6 +1912,18 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPaidAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paidAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPaidAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paidAmount', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByPaymentMethod() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMethod', Sort.asc);
@@ -2035,6 +2118,18 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPaidAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paidAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPaidAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paidAmount', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByPaymentMethod() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentMethod', Sort.asc);
@@ -2166,6 +2261,12 @@ extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByPaidAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'paidAmount');
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByPaymentMethod() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'paymentMethod');
@@ -2268,6 +2369,12 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
   QueryBuilder<Ticket, String?, QQueryOperations> notesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notes');
+    });
+  }
+
+  QueryBuilder<Ticket, double, QQueryOperations> paidAmountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'paidAmount');
     });
   }
 

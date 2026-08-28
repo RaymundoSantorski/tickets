@@ -26,6 +26,7 @@ class Ticket {
   late double balanceAfter;
   late double subtotal;
   late double total;
+  double paidAmount = 0;
 
   @enumerated
   PaymentMethod paymentMethod = PaymentMethod.none;
