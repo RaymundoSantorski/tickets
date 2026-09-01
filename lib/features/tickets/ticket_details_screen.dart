@@ -143,6 +143,29 @@ class TicketDetailsScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              SizedBox(
+                height: 40,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Pagado: ', style: mainTextStyle),
+                    Text('${ticket.paidAmount}', style: mainTextStyle),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 40,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Pendiente: ', style: mainTextStyle),
+                    Text(
+                      '${ticket.total - ticket.paidAmount}',
+                      style: mainTextStyle,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
