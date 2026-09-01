@@ -40,12 +40,21 @@ class TicketRepository {
   }
 
   Future<List<Ticket>> getPending(Id id) async {
-    return await isar.tickets
+    List<Ticket> pendingTickets = await isar.tickets
         .filter()
         .customerIdEqualTo(id)
         .typeEqualTo(TicketType.sale)
         .statusEqualTo(TicketStatus.pending)
         .findAll();
+    List<Ticket> partialTickets = await isar.tickets
+        .filter()
+        .customerIdEqualTo(id)
+        .typeEqualTo(TicketType.sale)
+        .statusEqualTo(TicketStatus.partial)
+        .findAll();
+    return [
+      ...{...pendingTickets, ...partialTickets},
+    ];
   }
 
   // Future<List<Ticket>> search(String query) async {
