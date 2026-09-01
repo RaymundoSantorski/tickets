@@ -62,7 +62,7 @@ class _PaymentFormState extends State<PaymentForm> {
     CustomerProvider customerDb = context.read<CustomerProvider>();
     TicketProvider ticketDb = context.read<TicketProvider>();
 
-    void onSave() {
+    void onSave() async {
       if (customer == null) return;
       Ticket newTicket;
       if (widget.ticket != null) {
@@ -88,6 +88,34 @@ class _PaymentFormState extends State<PaymentForm> {
           ..total = -total
           ..type = TicketType.payment;
         customer!.balance = before - total;
+      }
+      List<Ticket> pendingTickets = await ticketDb.getPending(customer!.id);
+      double rest = total;
+      for (Ticket ticket in pendingTickets) {
+        if (ticket.status == TicketStatus.pending) {
+          if (ticket.total <= rest) {
+            ticket.paidAmount = ticket.total;
+            ticket.status = TicketStatus.paid;
+            rest = rest - ticket.total;
+          } else {
+            ticket.status = TicketStatus.partial;
+            ticket.paidAmount = rest;
+            rest = 0;
+          }
+        } else if (ticket.status == TicketStatus.partial) {
+          double pendingAmount = ticket.total - ticket.paidAmount;
+          if (pendingAmount <= rest) {
+            ticket.paidAmount = ticket.total;
+            ticket.status = TicketStatus.paid;
+            rest = rest - pendingAmount;
+          } else {
+            ticket.paidAmount = ticket.paidAmount + rest;
+            ticket.status = TicketStatus.partial;
+            rest = 0;
+          }
+        }
+        ticketDb.save(ticket);
+        if (rest <= 0) break;
       }
       customerDb.save(customer!);
       ticketDb.save(newTicket);
