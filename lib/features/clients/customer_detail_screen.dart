@@ -40,7 +40,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     debugPrint('Customer id: ${widget.customerId}');
     Customer? freshCustomer = await db.get(widget.customerId);
     if (freshCustomer == null) {
-      throw Exception('No se encontró el cliente');
+      // throw Exception('No se encontró el cliente');
     }
     if (mounted) {
       setState(() {
