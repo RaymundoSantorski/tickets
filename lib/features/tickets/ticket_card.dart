@@ -113,6 +113,21 @@ Future<void> confirmDelete(
   );
 }
 
+String sellStatus(TicketStatus status) {
+  switch (status) {
+    case TicketStatus.pending:
+      return 'Pendiente';
+    case TicketStatus.partial:
+      return 'Parcial';
+    case TicketStatus.paid:
+      return 'Pagado';
+  }
+}
+
+String formatDisplayNumber(double value) {
+  return value.abs().toString();
+}
+
 Widget ticketCard(Ticket ticket, BuildContext context) {
   TicketProvider ticketDb = context.read<TicketProvider>();
   CustomerProvider customerDb = context.read<CustomerProvider>();
@@ -157,7 +172,9 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
         );
       },
       child: Card(
-        color: ticket.status == TicketStatus.pending
+        color: ticket.type == TicketType.payment
+            ? Colors.lightBlue
+            : ticket.status == TicketStatus.pending
             ? Colors.redAccent
             : ticket.status == TicketStatus.partial
             ? Colors.amberAccent
@@ -171,7 +188,7 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
                 children: [
                   Text(ticket.displayName),
                   SizedBox(height: 40),
-                  Text('${ticket.total}'),
+                  Text(formatDisplayNumber(ticket.total)),
                 ],
               ),
               Row(
@@ -181,7 +198,9 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
                     '${ticket.date.weekday} - ${ticket.date.day} - ${ticket.date.month} - ${ticket.date.year}',
                   ),
                   SizedBox(height: 40),
-                  Text(ticket.status.name),
+                  ticket.type == TicketType.payment
+                      ? Text('Pago')
+                      : Text('Venta - ${sellStatus(ticket.status)}'),
                 ],
               ),
             ],

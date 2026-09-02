@@ -118,7 +118,7 @@ class _PaymentFormState extends State<PaymentForm> {
         if (rest <= 0) break;
       }
       customerDb.save(customer!);
-      ticketDb.save(newTicket);
+      await ticketDb.save(newTicket);
       // Navigator.of(context).pop();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
