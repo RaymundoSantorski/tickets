@@ -52,9 +52,11 @@ class TicketRepository {
         .typeEqualTo(TicketType.sale)
         .statusEqualTo(TicketStatus.partial)
         .findAll();
-    return [
+    List<Ticket> tickets = [
       ...{...pendingTickets, ...partialTickets},
     ];
+    tickets.sort((last, curr) => last.date.compareTo(curr.date));
+    return tickets;
   }
 
   // Future<List<Ticket>> search(String query) async {
