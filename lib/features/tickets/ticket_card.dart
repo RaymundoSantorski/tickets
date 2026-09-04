@@ -119,7 +119,7 @@ String sellStatus(TicketStatus status) {
       return 'Pendiente';
     case TicketStatus.partial:
       return 'Parcial';
-    case TicketStatus.paid:
+    default:
       return 'Pagado';
   }
 }
