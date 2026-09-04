@@ -84,27 +84,43 @@ const TicketSchema = CollectionSchema(
       name: r'phoneNumber',
       type: IsarType.string,
     ),
-    r'status': PropertySchema(
+    r'shipmentStatus': PropertySchema(
       id: 13,
+      name: r'shipmentStatus',
+      type: IsarType.byte,
+      enumMap: _TicketshipmentStatusEnumValueMap,
+    ),
+    r'status': PropertySchema(
+      id: 14,
       name: r'status',
       type: IsarType.byte,
       enumMap: _TicketstatusEnumValueMap,
     ),
     r'subtotal': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'subtotal',
       type: IsarType.double,
     ),
     r'total': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'total',
       type: IsarType.double,
     ),
     r'type': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'type',
       type: IsarType.byte,
       enumMap: _TickettypeEnumValueMap,
+    ),
+    r'volWeight': PropertySchema(
+      id: 18,
+      name: r'volWeight',
+      type: IsarType.double,
+    ),
+    r'weight': PropertySchema(
+      id: 19,
+      name: r'weight',
+      type: IsarType.double,
     )
   },
   estimateSize: _ticketEstimateSize,
@@ -176,10 +192,13 @@ void _ticketSerialize(
   writer.writeDouble(offsets[10], object.paidAmount);
   writer.writeByte(offsets[11], object.paymentMethod.index);
   writer.writeString(offsets[12], object.phoneNumber);
-  writer.writeByte(offsets[13], object.status.index);
-  writer.writeDouble(offsets[14], object.subtotal);
-  writer.writeDouble(offsets[15], object.total);
-  writer.writeByte(offsets[16], object.type.index);
+  writer.writeByte(offsets[13], object.shipmentStatus.index);
+  writer.writeByte(offsets[14], object.status.index);
+  writer.writeDouble(offsets[15], object.subtotal);
+  writer.writeDouble(offsets[16], object.total);
+  writer.writeByte(offsets[17], object.type.index);
+  writer.writeDouble(offsets[18], object.volWeight);
+  writer.writeDouble(offsets[19], object.weight);
 }
 
 Ticket _ticketDeserialize(
@@ -211,13 +230,18 @@ Ticket _ticketDeserialize(
       _TicketpaymentMethodValueEnumMap[reader.readByteOrNull(offsets[11])] ??
           PaymentMethod.transfer;
   object.phoneNumber = reader.readStringOrNull(offsets[12]);
+  object.shipmentStatus =
+      _TicketshipmentStatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+          ShipmentStatus.requested;
   object.status =
-      _TicketstatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+      _TicketstatusValueEnumMap[reader.readByteOrNull(offsets[14])] ??
           TicketStatus.pending;
-  object.subtotal = reader.readDouble(offsets[14]);
-  object.total = reader.readDouble(offsets[15]);
-  object.type = _TickettypeValueEnumMap[reader.readByteOrNull(offsets[16])] ??
+  object.subtotal = reader.readDouble(offsets[15]);
+  object.total = reader.readDouble(offsets[16]);
+  object.type = _TickettypeValueEnumMap[reader.readByteOrNull(offsets[17])] ??
       TicketType.sale;
+  object.volWeight = reader.readDoubleOrNull(offsets[18]);
+  object.weight = reader.readDoubleOrNull(offsets[19]);
   return object;
 }
 
@@ -262,15 +286,23 @@ P _ticketDeserializeProp<P>(
     case 12:
       return (reader.readStringOrNull(offset)) as P;
     case 13:
+      return (_TicketshipmentStatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          ShipmentStatus.requested) as P;
+    case 14:
       return (_TicketstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketStatus.pending) as P;
-    case 14:
-      return (reader.readDouble(offset)) as P;
     case 15:
       return (reader.readDouble(offset)) as P;
     case 16:
+      return (reader.readDouble(offset)) as P;
+    case 17:
       return (_TickettypeValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketType.sale) as P;
+    case 18:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 19:
+      return (reader.readDoubleOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -288,15 +320,33 @@ const _TicketpaymentMethodValueEnumMap = {
   2: PaymentMethod.other,
   3: PaymentMethod.none,
 };
+const _TicketshipmentStatusEnumValueMap = {
+  'requested': 0,
+  'preparing': 1,
+  'shipped': 2,
+  'arrived': 3,
+  'cancelled': 4,
+  'none': 5,
+};
+const _TicketshipmentStatusValueEnumMap = {
+  0: ShipmentStatus.requested,
+  1: ShipmentStatus.preparing,
+  2: ShipmentStatus.shipped,
+  3: ShipmentStatus.arrived,
+  4: ShipmentStatus.cancelled,
+  5: ShipmentStatus.none,
+};
 const _TicketstatusEnumValueMap = {
   'pending': 0,
   'partial': 1,
   'paid': 2,
+  'none': 3,
 };
 const _TicketstatusValueEnumMap = {
   0: TicketStatus.pending,
   1: TicketStatus.partial,
   2: TicketStatus.paid,
+  3: TicketStatus.none,
 };
 const _TickettypeEnumValueMap = {
   'sale': 0,
@@ -1561,6 +1611,59 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> shipmentStatusEqualTo(
+      ShipmentStatus value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'shipmentStatus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> shipmentStatusGreaterThan(
+    ShipmentStatus value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'shipmentStatus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> shipmentStatusLessThan(
+    ShipmentStatus value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'shipmentStatus',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> shipmentStatusBetween(
+    ShipmentStatus lower,
+    ShipmentStatus upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'shipmentStatus',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterFilterCondition> statusEqualTo(
       TicketStatus value) {
     return QueryBuilder.apply(this, (query) {
@@ -1790,6 +1893,162 @@ extension TicketQueryFilter on QueryBuilder<Ticket, Ticket, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> volWeightIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'volWeight',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> volWeightIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'volWeight',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> volWeightEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'volWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> volWeightGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'volWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> volWeightLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'volWeight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> volWeightBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'volWeight',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> weightIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'weight',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> weightIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'weight',
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> weightEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'weight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> weightGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'weight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> weightLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'weight',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterFilterCondition> weightBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'weight',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
 }
 
 extension TicketQueryObject on QueryBuilder<Ticket, Ticket, QFilterCondition> {
@@ -1948,6 +2207,18 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByShipmentStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shipmentStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByShipmentStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shipmentStatus', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -1993,6 +2264,30 @@ extension TicketQuerySortBy on QueryBuilder<Ticket, Ticket, QSortBy> {
   QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByVolWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'volWeight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByVolWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'volWeight', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> sortByWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weight', Sort.desc);
     });
   }
 }
@@ -2154,6 +2449,18 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByShipmentStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shipmentStatus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByShipmentStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shipmentStatus', Sort.desc);
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -2199,6 +2506,30 @@ extension TicketQuerySortThenBy on QueryBuilder<Ticket, Ticket, QSortThenBy> {
   QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByTypeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByVolWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'volWeight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByVolWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'volWeight', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weight', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QAfterSortBy> thenByWeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'weight', Sort.desc);
     });
   }
 }
@@ -2280,6 +2611,12 @@ extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
     });
   }
 
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByShipmentStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'shipmentStatus');
+    });
+  }
+
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
@@ -2301,6 +2638,18 @@ extension TicketQueryWhereDistinct on QueryBuilder<Ticket, Ticket, QDistinct> {
   QueryBuilder<Ticket, Ticket, QDistinct> distinctByType() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'type');
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByVolWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'volWeight');
+    });
+  }
+
+  QueryBuilder<Ticket, Ticket, QDistinct> distinctByWeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'weight');
     });
   }
 }
@@ -2391,6 +2740,13 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Ticket, ShipmentStatus, QQueryOperations>
+      shipmentStatusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'shipmentStatus');
+    });
+  }
+
   QueryBuilder<Ticket, TicketStatus, QQueryOperations> statusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'status');
@@ -2412,6 +2768,18 @@ extension TicketQueryProperty on QueryBuilder<Ticket, Ticket, QQueryProperty> {
   QueryBuilder<Ticket, TicketType, QQueryOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'type');
+    });
+  }
+
+  QueryBuilder<Ticket, double?, QQueryOperations> volWeightProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'volWeight');
+    });
+  }
+
+  QueryBuilder<Ticket, double?, QQueryOperations> weightProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'weight');
     });
   }
 }
