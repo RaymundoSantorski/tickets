@@ -48,7 +48,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    CustomerProvider db = context.watch<CustomerProvider>();
+    CustomerProvider db = context.read<CustomerProvider>();
     void onSave() {
       Customer newCustomer;
       Address? address;

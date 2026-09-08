@@ -5,6 +5,7 @@ import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/tickets/payment_form.dart';
+import 'package:tickets/features/tickets/shipment_form.dart';
 import 'package:tickets/features/tickets/ticket_card.dart';
 import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
@@ -90,7 +91,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             child: const Icon(Icons.sell),
           ),
           FloatingActionButton.small(
-            onPressed: () {},
+            onPressed: () {
+              if (customer == null) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ShipmentForm(customer: customer!),
+                ),
+              );
+            },
             heroTag: null,
             child: const Icon(Icons.local_shipping),
           ),
