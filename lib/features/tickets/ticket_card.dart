@@ -200,6 +200,8 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
                   SizedBox(height: 40),
                   ticket.type == TicketType.payment
                       ? Text('Pago')
+                      : ticket.type == TicketType.shipment
+                      ? Text('Envio')
                       : Text('Venta - ${sellStatus(ticket.status)}'),
                 ],
               ),
