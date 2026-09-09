@@ -40,6 +40,7 @@ class Ticket {
   ShipmentStatus shipmentStatus = ShipmentStatus.none;
   double? weight;
   double? volWeight;
+  int? shipQuantity;
 
   String? notes;
   List<TicketItem> items = [];
