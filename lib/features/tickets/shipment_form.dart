@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tickets/core/models/customer.dart';
+import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/add_customer_screen.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
+import 'package:tickets/features/tickets/ticket_provider.dart';
 
 class ShipmentForm extends StatefulWidget {
   const ShipmentForm({super.key, required this.customer});
@@ -39,7 +41,38 @@ class _ShipmentFormState extends State<ShipmentForm> {
 
   @override
   Widget build(BuildContext context) {
-    CustomerProvider db = context.watch<CustomerProvider>();
+    TicketProvider db = context.watch<TicketProvider>();
+
+    void pop() {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+
+    Future<void> save() async {
+      if (customer == null) return;
+      Ticket shipmentTicket = Ticket()
+        ..balanceAfter = customer!.balance
+        ..balanceBefore = customer!.balance
+        ..customerId = customer!.id
+        ..date = DateTime.now()
+        ..discount = 0
+        ..displayName = customer!.name
+        ..fullName = customer!.fullName
+        ..phoneNumber = customer!.phoneNumber
+        ..paidAmount = 0
+        ..shipQuantity = customer!.pendingItems
+        ..shipmentStatus = ShipmentStatus.requested
+        ..status = TicketStatus.none
+        ..subtotal = 0
+        ..total = 0
+        ..type = TicketType.shipment
+        ..volWeight = customer!.pendingVolumetricWeight
+        ..weight = customer!.pendingWeight;
+      await db.save(shipmentTicket);
+      pop();
+    }
+
     return customer == null
         ? Scaffold()
         : Scaffold(
@@ -106,7 +139,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
                           ),
                           Center(
                             child: FilledButton(
-                              onPressed: () {},
+                              onPressed: save,
                               child: Text('Continuar'),
                             ),
                           ),
