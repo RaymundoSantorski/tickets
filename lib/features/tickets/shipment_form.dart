@@ -56,6 +56,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
         ..balanceBefore = customer!.balance
         ..customerId = customer!.id
         ..date = DateTime.now()
+        ..dueDate = DateTime.now()
         ..discount = 0
         ..displayName = customer!.name
         ..fullName = customer!.fullName
