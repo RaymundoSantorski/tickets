@@ -33,28 +33,33 @@ const CustomerSchema = CollectionSchema(
       name: r'fullName',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
+    r'lastShipment': PropertySchema(
       id: 3,
+      name: r'lastShipment',
+      type: IsarType.dateTime,
+    ),
+    r'name': PropertySchema(
+      id: 4,
       name: r'name',
       type: IsarType.string,
     ),
     r'pendingItems': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'pendingItems',
       type: IsarType.long,
     ),
     r'pendingVolumetricWeight': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'pendingVolumetricWeight',
       type: IsarType.double,
     ),
     r'pendingWeight': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'pendingWeight',
       type: IsarType.double,
     ),
     r'phoneNumber': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'phoneNumber',
       type: IsarType.string,
     )
@@ -111,11 +116,12 @@ void _customerSerialize(
   );
   writer.writeDouble(offsets[1], object.balance);
   writer.writeString(offsets[2], object.fullName);
-  writer.writeString(offsets[3], object.name);
-  writer.writeLong(offsets[4], object.pendingItems);
-  writer.writeDouble(offsets[5], object.pendingVolumetricWeight);
-  writer.writeDouble(offsets[6], object.pendingWeight);
-  writer.writeString(offsets[7], object.phoneNumber);
+  writer.writeDateTime(offsets[3], object.lastShipment);
+  writer.writeString(offsets[4], object.name);
+  writer.writeLong(offsets[5], object.pendingItems);
+  writer.writeDouble(offsets[6], object.pendingVolumetricWeight);
+  writer.writeDouble(offsets[7], object.pendingWeight);
+  writer.writeString(offsets[8], object.phoneNumber);
 }
 
 Customer _customerDeserialize(
@@ -133,11 +139,12 @@ Customer _customerDeserialize(
   object.balance = reader.readDouble(offsets[1]);
   object.fullName = reader.readString(offsets[2]);
   object.id = id;
-  object.name = reader.readString(offsets[3]);
-  object.pendingItems = reader.readLong(offsets[4]);
-  object.pendingVolumetricWeight = reader.readDouble(offsets[5]);
-  object.pendingWeight = reader.readDouble(offsets[6]);
-  object.phoneNumber = reader.readStringOrNull(offsets[7]);
+  object.lastShipment = reader.readDateTimeOrNull(offsets[3]);
+  object.name = reader.readString(offsets[4]);
+  object.pendingItems = reader.readLong(offsets[5]);
+  object.pendingVolumetricWeight = reader.readDouble(offsets[6]);
+  object.pendingWeight = reader.readDouble(offsets[7]);
+  object.phoneNumber = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -159,14 +166,16 @@ P _customerDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 5:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
       return (reader.readDouble(offset)) as P;
     case 7:
+      return (reader.readDouble(offset)) as P;
+    case 8:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -514,6 +523,77 @@ extension CustomerQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> lastShipmentIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastShipment',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      lastShipmentIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastShipment',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> lastShipmentEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastShipment',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      lastShipmentGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastShipment',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> lastShipmentLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastShipment',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> lastShipmentBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastShipment',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1023,6 +1103,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLastShipment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastShipment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLastShipmentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastShipment', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1124,6 +1216,18 @@ extension CustomerQuerySortThenBy
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLastShipment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastShipment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLastShipmentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastShipment', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1202,6 +1306,12 @@ extension CustomerQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Customer, Customer, QDistinct> distinctByLastShipment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastShipment');
+    });
+  }
+
   QueryBuilder<Customer, Customer, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1259,6 +1369,12 @@ extension CustomerQueryProperty
   QueryBuilder<Customer, String, QQueryOperations> fullNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fullName');
+    });
+  }
+
+  QueryBuilder<Customer, DateTime?, QQueryOperations> lastShipmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastShipment');
     });
   }
 

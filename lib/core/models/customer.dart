@@ -9,6 +9,7 @@ class Customer {
   String? phoneNumber;
   Address? address;
   double balance = 0;
+  DateTime? lastShipment;
   int pendingItems = 0;
   double pendingWeight = 0;
   double pendingVolumetricWeight = 0;
