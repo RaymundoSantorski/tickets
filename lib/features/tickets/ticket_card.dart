@@ -5,6 +5,7 @@ import 'package:tickets/core/models/customer.dart';
 import 'package:tickets/core/models/ticket.dart';
 import 'package:tickets/features/clients/customer_provider.dart';
 import 'package:tickets/features/tickets/helpers/calculate.dart';
+import 'package:tickets/features/tickets/shipment_detail_screen.dart';
 import 'package:tickets/features/tickets/ticket_details_screen.dart';
 import 'package:tickets/features/tickets/ticket_form.dart';
 import 'package:tickets/features/tickets/ticket_provider.dart';
@@ -167,7 +168,12 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => TicketDetailsScreen(ticket: ticket),
+            builder: (_) {
+              if (ticket.type == TicketType.shipment) {
+                return ShipmentDetailScreen(ticket: ticket);
+              }
+              return TicketDetailsScreen(ticket: ticket);
+            },
           ),
         );
       },
