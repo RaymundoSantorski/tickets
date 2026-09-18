@@ -207,7 +207,15 @@ Widget ticketCard(Ticket ticket, BuildContext context) {
                   ticket.type == TicketType.payment
                       ? Text('Pago')
                       : ticket.type == TicketType.shipment
-                      ? Text('Envio')
+                      ? (ticket.shipmentStatus == ShipmentStatus.cancelled
+                            ? Text('Envio - Cancelado')
+                            : ticket.shipmentStatus == ShipmentStatus.arrived
+                            ? Text('Envio - Entregado')
+                            : ticket.shipmentStatus == ShipmentStatus.preparing
+                            ? Text('Envio - En preparación')
+                            : ticket.shipmentStatus == ShipmentStatus.requested
+                            ? Text('Envio - Solicitado')
+                            : Text('Envio - Enviado'))
                       : Text('Venta - ${sellStatus(ticket.status)}'),
                 ],
               ),
